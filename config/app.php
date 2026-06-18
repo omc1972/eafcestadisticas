@@ -123,4 +123,8 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    // ID del jugador genérico usado como placeholder en partidos no-FIFA (rival CPU).
+    // Configurar en .env con JUGADOR_EXTRA_ID si el ID cambia al re-sembrar la BD.
+    'jugador_extra_id' => env('JUGADOR_EXTRA_ID', 168),
+
 ];

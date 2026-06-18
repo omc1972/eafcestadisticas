@@ -16,8 +16,5 @@ class Rival extends Model
         'fecha'
     ];
 
-    public function plantilla()
-    {
-        return $this->hasMany(Plantilla::class)->where('id', 5);
-    }
+
 }

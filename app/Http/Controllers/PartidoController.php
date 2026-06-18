@@ -122,7 +122,7 @@ class PartidoController extends Controller
         // Reglas adicionales: si la competición NO es 'fifa' tratamos al visitante como "0" (rival genérico)
         // y la plantilla visitante será únicamente el jugador por defecto (id 168). Los eventos
         // del visitante solo podrán estar asociados a ese jugador por defecto.
-        $jugadorExtra = Jugador::find(168);
+        $jugadorExtra = Jugador::find(config('app.jugador_extra_id'));
 
         // determinar si la competición es FIFA
         $competicion = $partido->competicion ?? Competicion::find($partido->competicion_id);
@@ -230,7 +230,7 @@ class PartidoController extends Controller
             ->where('temporada_id', $partido->temporada_id)
             ->where('equipo_id', $partido->equipo_id)
             ->first();
-        $jugadorExtra = Jugador::find(168);
+        $jugadorExtra = Jugador::find(config('app.jugador_extra_id'));
 
         if ($plantilla && $jugadorExtra) {
             $plantilla->jugadores->push($jugadorExtra);
