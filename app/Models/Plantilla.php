@@ -38,7 +38,7 @@ class Plantilla extends Model
     public function jugadores()
     {
         return $this->belongsToMany(Jugador::class, 'plantilla_jugador')
-                    ->withPivot('dorsal')
+                    ->withPivot('dorsal', 'es_titular')
                     ->withTimestamps();
     }
 }
