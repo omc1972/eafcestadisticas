@@ -59,15 +59,17 @@ class TemporadaController extends Controller
             ->with(['liga', 'equipo'])
             ->get();
 
+        // Load all partidos for this temporada in one query, filter per-liga in-memory
+        $todosPartidos = \App\Models\Partido::where('temporada_id', $temporada->id)
+            ->whereIn('equipo_id', $plantillas->pluck('equipo_id')->unique()->toArray())
+            ->get();
+
         // Agrupar por liga
-        $ligasData = $plantillas->groupBy('liga_id')->map(function ($plantillasLiga) use ($temporada) {
+        $ligasData = $plantillas->groupBy('liga_id')->map(function ($plantillasLiga) use ($todosPartidos) {
             $liga = $plantillasLiga->first()->liga;
-            $equiposIds = $plantillasLiga->pluck('equipo_id')->toArray();
-            
-            // Obtener partidos de los equipos de esta liga en esta temporada
-            $partidos = \App\Models\Partido::where('temporada_id', $temporada->id)
-                ->whereIn('equipo_id', $equiposIds)
-                ->get();
+            $equiposIds = $plantillasLiga->pluck('equipo_id');
+
+            $partidos = $todosPartidos->whereIn('equipo_id', $equiposIds);
             
             $partidosJugados = $partidos->count();
             $golesAFavor = $partidos->sum('goles_equipo');
