@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Plus, PlusCircle, PlusSquare } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 
 interface DynamicFieldArrayProps {
   field: FieldConfig;
@@ -54,20 +54,26 @@ const DynamicFieldArray: React.FC<DynamicFieldArrayProps> = ({ field, data, setD
       <label className="block font-medium">{field.label}</label>
 
       {data.map((row, index) => (
-        <div key={index} className="flex flex-wrap gap-2 items-end">
+        <div key={index} className="flex flex-wrap gap-2 items-center border border-border/50 rounded-lg px-3 py-2 bg-muted/20">
           {field.fields?.map((f) => (
             // skip rendering hidden fields (they still exist in row data)
             f.hidden ? null : (
-            <div key={f.name} className="flex-1 min-w-[120px]">
+            <div key={f.name} className={f.type === "boolean" ? "flex-none" : "flex-1 min-w-[120px]"}>
               {f.type === "boolean" ? (
-                <div className="flex flex-col items-center gap-1">
-                  <span className="text-xs text-muted-foreground">{f.label}</span>
+                <label
+                  className={`flex items-center gap-2 px-3 h-9 rounded-md border cursor-pointer transition-all select-none ${
+                    row[f.name]
+                      ? "border-primary/50 bg-primary/10 text-primary"
+                      : "border-input bg-background text-muted-foreground hover:border-primary/30 hover:bg-primary/5"
+                  }`}
+                >
+                  <span className="text-sm font-medium whitespace-nowrap">{f.label}</span>
                   <Switch
                     checked={!!row[f.name]}
                     onCheckedChange={(checked) => handleChange(index, f.name, checked)}
                     disabled={Boolean((f as any).disabled)}
                   />
-                </div>
+                </label>
               ) : f.type === "select" ? (
                 <Select
                   value={row[f.name] ? String(row[f.name]) : ""}
@@ -106,17 +112,19 @@ const DynamicFieldArray: React.FC<DynamicFieldArrayProps> = ({ field, data, setD
 
           <Button
             type="button"
-            variant="destructive"
-            size="sm"
+            variant="ghost"
+            size="icon"
+            className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
             onClick={() => removeRow(index)}
           >
-            X
+            <Trash2 className="w-4 h-4" />
           </Button>
         </div>
       ))}
 
-      <Button type="button" variant="outline" size="sm" onClick={addRow}>
+      <Button type="button" variant="outline" size="sm" onClick={addRow} className="gap-1.5">
         <Plus className="w-4 h-4" />
+        Añadir
       </Button>
     </div>
   );
