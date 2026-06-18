@@ -6,6 +6,7 @@ use App\Models\Temporada;
 use App\Models\Liga;
 use App\Models\Plantilla;
 use App\Models\Partido;
+use App\Models\TipoEvento;
 use Inertia\Inertia;
 
 class LigaEstadisticasController extends Controller
@@ -333,10 +334,10 @@ class LigaEstadisticasController extends Controller
                 if (!isset($jugadores[$jugadorId])) continue;
                 // Buscar eventos de sustituciÃ³n para este jugador
                 $eventoSale = $partido->eventos->first(function ($e) use ($jugadorId) {
-                    return $e->jugador_id == $jugadorId && $e->tipo_evento_id == 9; // Sale
+                    return $e->jugador_id == $jugadorId && $e->tipo_evento_id == TipoEvento::SALE;
                 });
                 $eventoEntra = $partido->eventos->first(function ($e) use ($jugadorId) {
-                    return $e->jugador_id == $jugadorId && $e->tipo_evento_id == 8; // Entra
+                    return $e->jugador_id == $jugadorId && $e->tipo_evento_id == TipoEvento::ENTRA;
                 });
                 if ($eventoEntra && $eventoSale) {
                     $minutos = ($eventoSale->minuto ?? 0) - ($eventoEntra->minuto ?? 0);
@@ -358,22 +359,22 @@ class LigaEstadisticasController extends Controller
             }
             // Procesar eventos
             foreach ($partido->eventos as $evento) {
-                if ($evento->jugador_id == 168) continue; // Saltar jugador especial
+                if ($evento->jugador_id == config('app.jugador_extra_id')) continue;
                 $jugadorId = $evento->jugador_id;
                 if (!isset($jugadores[$jugadorId])) continue;
-                if ($evento->tipo_evento_id == 1) { // Gol
+                if ($evento->tipo_evento_id == TipoEvento::GOL) {
                     $jugadores[$jugadorId]['goles']++;
-                } elseif ($evento->tipo_evento_id == 10) { // Asistencia
+                } elseif ($evento->tipo_evento_id == TipoEvento::ASISTENCIA) {
                     $jugadores[$jugadorId]['asistencias']++;
-                } elseif ($evento->tipo_evento_id == 2) { // Penalty provocado
+                } elseif ($evento->tipo_evento_id == TipoEvento::PENALTY_PROVOCADO) {
                     $jugadores[$jugadorId]['penalties_provocados']++;
-                } elseif ($evento->tipo_evento_id == 6) { // TA Realizada
+                } elseif ($evento->tipo_evento_id == TipoEvento::TARJETA_AMARILLA) {
                     $jugadores[$jugadorId]['tarjetas_amarillas']++;
                     $jugadores[$jugadorId]['puntuacion_amonestaciones'] += 1;
-                } elseif ($evento->tipo_evento_id == 7) { // TR Realizada
+                } elseif ($evento->tipo_evento_id == TipoEvento::TARJETA_ROJA) {
                     $jugadores[$jugadorId]['tarjetas_rojas']++;
                     $jugadores[$jugadorId]['puntuacion_amonestaciones'] += 3;
-                } elseif ($evento->tipo_evento_id == 13) { // Penalty parado
+                } elseif ($evento->tipo_evento_id == TipoEvento::PENALTY_PARADO) {
                     $jugadores[$jugadorId]['penalties_parados']++;
                 }
             }
