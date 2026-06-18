@@ -157,7 +157,7 @@ class JugadorController extends Controller
                         $entra=$evento->minuto;
                         break;
                     case 'Sale':
-                        $sale=$evento->sale;
+                        $sale=$evento->minuto;
                         break;
                 }
             }
