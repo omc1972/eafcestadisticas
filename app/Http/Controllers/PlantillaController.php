@@ -9,6 +9,7 @@ use App\Models\Jugador;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\Campeonato;
+use App\Models\Partido;
 use App\Models\Rival;
 
 class PlantillaController extends Controller
@@ -96,29 +97,24 @@ class PlantillaController extends Controller
     public function show(Plantilla $plantilla)
     {
         $plantilla->load(['temporada', 'equipo', 'campeonato', 'jugadores']);
-        $valor = 0;
-        foreach($plantilla->jugadores as $jugador) {
-            $jugador->load([
-                'alineaciones' => function ($q) use ($jugador, $plantilla) {
-                    $q->where('jugador_id', $jugador->id)
-                    ->whereHas('partido', function ($partidoQuery) use ($plantilla) {
-                        $partidoQuery
-                            ->where('temporada_id', $plantilla->temporada_id)
-                            ->where('equipo_id', $plantilla->equipo_id);
 
-                        if (!empty($plantilla->campeonato_id)) {
-                            $partidoQuery->where('campeonato_id', $plantilla->campeonato_id);
-                        }
-                    })
-                    ->with([
-                        'partido.equipo',
-                        'partido.eventos' => function ($e) use ($jugador) {
-                            $e->where('jugador_id', $jugador->id);
-                        }
-                    ]);
-                },
-                'estilos'
-            ]);
+        $partidoQuery = Partido::where('temporada_id', $plantilla->temporada_id)
+            ->where('equipo_id', $plantilla->equipo_id);
+        if (!empty($plantilla->campeonato_id)) {
+            $partidoQuery->where('campeonato_id', $plantilla->campeonato_id);
+        }
+        $partidoIds = $partidoQuery->pluck('id');
+
+        // Batch-load alineaciones + events for all jugadores in one round of queries
+        $plantilla->jugadores->load([
+            'alineaciones' => fn($q) => $q
+                ->whereIn('partido_id', $partidoIds)
+                ->with(['partido', 'partido.eventos.tipoEvento']),
+            'estilos',
+        ]);
+
+        $valor = 0;
+        foreach ($plantilla->jugadores as $jugador) {
         
             $resumen = [
                 'goles'=> 0,
@@ -180,7 +176,7 @@ class PlantillaController extends Controller
                 $resumen['jugador_del_partido'] += $alineacion->jugador_del_partido ?? 0;
                 $entra=0;
                 $sale=$alineacion->partido->minutos_jugados;
-                foreach($alineacion->partido->eventos as $evento){
+                foreach($alineacion->partido->eventos->where('jugador_id', $jugador->id) as $evento){
                     switch($evento->tipoEvento->nombre){
                         case 'Gol':
                             $resumen['goles']++;
@@ -228,13 +224,7 @@ class PlantillaController extends Controller
             }
             $jugador->resumen = $resumen;
         }
-        $plantilla->media = $valor / max(count($plantilla->jugadores),1);
-        $jugadoresPlantilla = $plantilla->jugadores()->get()->map(function ($j) {
-            return [
-                'jugador_id' => $j->id,
-                'dorsal' => $j->pivot->dorsal,
-            ];
-        });
+        $plantilla->media = $valor / max(count($plantilla->jugadores), 1);
 
         return Inertia::render('Plantillas/View', [
             'plantilla' => $plantilla,
