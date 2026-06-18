@@ -69,6 +69,7 @@ class PlantillaController extends Controller
             'jugadores' => 'nullable|array',
             'jugadores.*.jugador_id' => 'exists:jugadors,id',
             'jugadores.*.dorsal' => 'required|string',
+            'jugadores.*.es_titular' => 'boolean',
         ]);
 
         $plantilla = Plantilla::create([
@@ -78,14 +79,18 @@ class PlantillaController extends Controller
         ]);
 
         if (!empty($validated['jugadores'])) {
+            $titulares = 0;
             $syncData = [];
             foreach ($validated['jugadores'] as $j) {
+                $esTitular = !empty($j['es_titular']) && $titulares < 11;
+                if ($esTitular) $titulares++;
                 $syncData[$j['jugador_id']] = [
                     'dorsal' => $j['dorsal'],
+                    'es_titular' => $esTitular,
                 ];
             }
             $plantilla->jugadores()->sync($syncData);
-        } 
+        }
 
         return redirect()->route('plantillas.index')
             ->with('success', 'Plantilla creada con éxito');
@@ -241,6 +246,7 @@ class PlantillaController extends Controller
             return [
                 'jugador_id' => $j->id,
                 'dorsal' => $j->pivot->dorsal,
+                'es_titular' => (bool) $j->pivot->es_titular,
             ];
         });
 
@@ -265,6 +271,7 @@ class PlantillaController extends Controller
             'jugadores' => 'nullable|array',
             'jugadores.*.jugador_id' => 'exists:jugadors,id',
             'jugadores.*.dorsal' => 'required|string',
+            'jugadores.*.es_titular' => 'boolean',
         ]);
 
         $plantilla->update([
@@ -274,10 +281,14 @@ class PlantillaController extends Controller
         ]);
 
         if (!empty($validated['jugadores'])) {
+            $titulares = 0;
             $syncData = [];
             foreach ($validated['jugadores'] as $j) {
+                $esTitular = !empty($j['es_titular']) && $titulares < 11;
+                if ($esTitular) $titulares++;
                 $syncData[$j['jugador_id']] = [
                     'dorsal' => $j['dorsal'],
+                    'es_titular' => $esTitular,
                 ];
             }
             $plantilla->jugadores()->sync($syncData);
@@ -328,7 +339,12 @@ class PlantillaController extends Controller
         $plantillaEquipoJugadores = [];
         if ($plantillaEquipo) {
             $plantillaEquipoJugadores = $plantillaEquipo->jugadores->map(function($j){
-                return [ 'id' => $j->id, 'nombre' => $j->nombre ];
+                return [
+                    'id' => $j->id,
+                    'nombre' => $j->nombre,
+                    'dorsal' => $j->pivot->dorsal,
+                    'es_titular' => (bool) $j->pivot->es_titular,
+                ];
             })->toArray();
         }
 
@@ -363,7 +379,12 @@ class PlantillaController extends Controller
 
                 if ($plantillaRival) {
                     $plantillaRivalJugadores = $plantillaRival->jugadores->map(function($j){
-                        return [ 'id' => $j->id, 'nombre' => $j->nombre ];
+                        return [
+                            'id' => $j->id,
+                            'nombre' => $j->nombre,
+                            'dorsal' => $j->pivot->dorsal,
+                            'es_titular' => (bool) $j->pivot->es_titular,
+                        ];
                     })->toArray();
                 }
             }

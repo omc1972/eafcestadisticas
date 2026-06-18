@@ -1,18 +1,19 @@
-import React, { useState } from "react";
-import { Head, router , Link} from "@inertiajs/react";
+import React from "react";
+import { Head } from "@inertiajs/react";
 import AppLayout from "@/layouts/app-layout";
 import { dashboard } from "@/routes";
 import { type BreadcrumbItem } from "@/types";
 import DynamicForm from "@/components/forms/DynamicForm";
 
 type Jugador = {
-  id: number; 
-  nombre: string
-}
+  id: number;
+  nombre: string;
+};
 
-interface PlantillaJugadores {
+interface PlantillaJugador {
     jugador_id: number;
     dorsal: string;
+    es_titular: boolean;
 }
 
 interface Props {
@@ -27,26 +28,16 @@ interface Props {
   temporadas: { id: number; nombre: string }[];
   campeonatos: { id: number; nombre: string }[];
   jugadores: Jugador[];
-  jugadoresPlantilla : PlantillaJugadores[];
+  jugadoresPlantilla: PlantillaJugador[];
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
-  {
-    title: "Dashboard",
-    href: dashboard().url,
-  },
+  { title: "Dashboard", href: dashboard().url },
 ];
 
 const Edit: React.FC<Props> = ({ plantilla, equipos, temporadas, campeonatos, jugadores, jugadoresPlantilla }) => {
-    
-    const jugadoresFields = jugadores.map(j => ({
-        name: "jugador_id",
-        label: j.nombre,
-        type: "select",
-        options: [{ value: j.id, label: j.nombre }]
-    }));
-
     const campeonatosOptions = campeonatos.map(c => ({ value: c.id, label: c.nombre }));
+
     const fields = [
         { name: "equipo_id", label: "Equipo", type: "select", options: equipos.map(e => ({ label: e.nombre, value: e.id })) },
         { name: "temporada_id", label: "Temporada", type: "select", options: temporadas.map(t => ({ label: t.nombre, value: t.id })) },
@@ -60,10 +51,11 @@ const Edit: React.FC<Props> = ({ plantilla, equipos, temporadas, campeonatos, ju
               name: "jugador_id",
               label: "Jugador",
               type: "select",
-              options: jugadores.map(j => ({ value: j.id, label: j.nombre }))
+              options: jugadores.map(j => ({ value: j.id, label: j.nombre })),
             },
             { name: "dorsal", label: "Dorsal", type: "text" },
-          ]
+            { name: "es_titular", label: "Titular", type: "boolean" },
+          ],
         },
     ];
 
@@ -71,7 +63,7 @@ const Edit: React.FC<Props> = ({ plantilla, equipos, temporadas, campeonatos, ju
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Plantillas"/>
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-            <h1 className="text-2xl font-bold mb-4">Editar Plantilla</h1>
+                <h1 className="text-2xl font-bold mb-4">Editar Plantilla</h1>
                 <DynamicForm
                     fields={fields}
                     method="put"
