@@ -1,7 +1,7 @@
 import React from "react";
 import type { FieldConfig } from "./DynamicForm";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Plus, PlusCircle, PlusSquare } from "lucide-react";
@@ -60,13 +60,14 @@ const DynamicFieldArray: React.FC<DynamicFieldArrayProps> = ({ field, data, setD
             f.hidden ? null : (
             <div key={f.name} className="flex-1 min-w-[120px]">
               {f.type === "boolean" ? (
-                <Checkbox
-                  checked={!!row[f.name]}
-                  onCheckedChange={(checked) => handleChange(index, f.name, checked)}
-                  disabled={Boolean((f as any).disabled)}
-                >
-                  {f.label}
-                </Checkbox>
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-xs text-muted-foreground">{f.label}</span>
+                  <Switch
+                    checked={!!row[f.name]}
+                    onCheckedChange={(checked) => handleChange(index, f.name, checked)}
+                    disabled={Boolean((f as any).disabled)}
+                  />
+                </div>
               ) : f.type === "select" ? (
                 <Select
                   value={row[f.name] ? String(row[f.name]) : ""}
