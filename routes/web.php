@@ -72,6 +72,3 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
-
-// Ruta de depuración: ver un partido sin autenticación (temporal)
-Route::get('debug/partidos/{partido}', [PartidoController::class, 'show'])->name('debug.partidos.show');
