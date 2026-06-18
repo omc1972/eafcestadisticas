@@ -119,14 +119,25 @@ const Index: React.FC<Props> = ({ plantillas }) => {
                                             </p>
                                         )}
 
-                                        {/* Media */}
-                                        <div className="flex items-baseline gap-1 mt-1">
-                                            <span className={`text-lg font-bold ${getMediaColor(plantilla.media_titulares ?? plantilla.media_promedio)}`}>
-                                                {(plantilla.media_titulares ?? plantilla.media_promedio) ?? "-"}
-                                            </span>
-                                            <span className="text-xs text-muted-foreground">
-                                                {plantilla.media_titulares ? "media 11" : "media"}
-                                            </span>
+                                        {/* Medias */}
+                                        <div className="flex items-center gap-3 mt-1">
+                                            <div className="flex flex-col items-center">
+                                                <span className={`text-base font-bold leading-tight ${getMediaColor(plantilla.media_promedio)}`}>
+                                                    {plantilla.media_promedio ?? "-"}
+                                                </span>
+                                                <span className="text-[9px] text-muted-foreground uppercase tracking-wide">equipo</span>
+                                            </div>
+                                            {plantilla.media_titulares !== null && (
+                                                <>
+                                                    <div className="w-px h-6 bg-border/60" />
+                                                    <div className="flex flex-col items-center">
+                                                        <span className={`text-base font-bold leading-tight ${getMediaColor(plantilla.media_titulares)}`}>
+                                                            {plantilla.media_titulares}
+                                                        </span>
+                                                        <span className="text-[9px] text-muted-foreground uppercase tracking-wide">11</span>
+                                                    </div>
+                                                </>
+                                            )}
                                         </div>
 
                                         {/* Jugadores */}
