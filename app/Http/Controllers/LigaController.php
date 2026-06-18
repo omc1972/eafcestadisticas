@@ -34,7 +34,7 @@ class LigaController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'nombre' => 'required|string|max:255',
+            'nombre' => 'required|string|max:255|unique:ligas,nombre',
             'competicion_id' => 'nullable|exists:competicions,id',
             'activa' => 'boolean',
         ]);
@@ -60,7 +60,7 @@ class LigaController extends Controller
     public function update(Request $request, Liga $liga)
     {
         $validated = $request->validate([
-            'nombre' => 'required|string|max:255',
+            'nombre' => 'required|string|max:255|unique:ligas,nombre,' . $liga->id,
             'competicion_id' => 'nullable|exists:competicions,id',
             'activa' => 'boolean',
         ]);
