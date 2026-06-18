@@ -114,18 +114,15 @@ class PartidoController extends Controller
             'rival',
             'visitanteRival',
             'visitanteEquipo',
+            'competicion',
             'alineaciones.jugador',
             'eventos.jugador',
             'eventos.tipoEvento',
         ]);
-        // Intentar separar alineaciones por plantilla del equipo y del visitante (si existe).
-        // Reglas adicionales: si la competición NO es 'fifa' tratamos al visitante como "0" (rival genérico)
-        // y la plantilla visitante será únicamente el jugador por defecto (id 168). Los eventos
-        // del visitante solo podrán estar asociados a ese jugador por defecto.
         $jugadorExtra = Jugador::find(config('app.jugador_extra_id'));
 
         // determinar si la competición es FIFA
-        $competicion = $partido->competicion ?? Competicion::find($partido->competicion_id);
+        $competicion = $partido->competicion;
         $isFifa = $competicion && strtolower($competicion->nombre) === 'fifa';
 
         $plantillaEquipoPlayers = collect([]);
