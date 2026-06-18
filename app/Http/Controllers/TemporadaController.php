@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Temporada;
+use App\Models\TipoEvento;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -255,25 +256,25 @@ class TemporadaController extends Controller
             }
 
             foreach ($partido->eventos as $evento) {
-                if ($evento->jugador_id == 168) {
+                if ($evento->jugador_id == config('app.jugador_extra_id')) {
                     continue;
                 }
 
                 $jugadorId = $evento->jugador_id;
 
-                if ($evento->tipo_evento_id == 1) { // Gol
+                if ($evento->tipo_evento_id == TipoEvento::GOL) {
                     $jugadores[$jugadorId]['goles']++;
-                } elseif ($evento->tipo_evento_id == 10) { // Asistencia
+                } elseif ($evento->tipo_evento_id == TipoEvento::ASISTENCIA) {
                     $jugadores[$jugadorId]['asistencias']++;
-                } elseif ($evento->tipo_evento_id == 6) { // Asistencia
+                } elseif ($evento->tipo_evento_id == TipoEvento::TARJETA_AMARILLA) {
                     $jugadores[$jugadorId]['tarjetas_amarillas']++;
-                } elseif ($evento->tipo_evento_id == 7) { // Asistencia
+                } elseif ($evento->tipo_evento_id == TipoEvento::TARJETA_ROJA) {
                     $jugadores[$jugadorId]['tarjetas_rojas']++;
-                } elseif ($evento->tipo_evento_id == 12) { // Asistencia
+                } elseif ($evento->tipo_evento_id == TipoEvento::PENALTY_FALLADO) {
                     $jugadores[$jugadorId]['penalties_fallados']++;
-                } elseif ($evento->tipo_evento_id == 13) { // Asistencia
+                } elseif ($evento->tipo_evento_id == TipoEvento::PENALTY_PARADO) {
                     $jugadores[$jugadorId]['penalties_parados']++;
-                } elseif ($evento->tipo_evento_id == 11) { // Asistencia
+                } elseif ($evento->tipo_evento_id == TipoEvento::PENALTY_MARCADO) {
                     $jugadores[$jugadorId]['penalties_marcados']++;
                 }
             }        
