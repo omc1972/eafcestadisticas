@@ -22,8 +22,12 @@ class PlantillaController extends Controller
         $plantillas = Plantilla::with(['equipo', 'temporada', 'jugadores', 'campeonato', 'liga'])->get();
 
         $plantillasData = $plantillas->map(function ($plantilla) {
+            $titulares = $plantilla->jugadores->filter(fn($j) => $j->pivot->es_titular);
             $mediaPromedio = $plantilla->jugadores->count() > 0
                 ? round($plantilla->jugadores->avg('media'), 1)
+                : null;
+            $mediaTitulares = $titulares->count() > 0
+                ? round($titulares->avg('media'), 1)
                 : null;
             return [
                 'id' => $plantilla->id,
@@ -37,6 +41,11 @@ class PlantillaController extends Controller
                 'campeonato' => $plantilla->campeonato ? ['nombre' => $plantilla->campeonato->nombre] : null,
                 'num_jugadores' => $plantilla->jugadores->count(),
                 'media_promedio' => $mediaPromedio,
+                'media_titulares' => $mediaTitulares,
+                'titulares' => $titulares->map(fn($j) => [
+                    'nombre' => $j->nombre,
+                    'media'  => $j->media,
+                ])->values(),
             ];
         });
 

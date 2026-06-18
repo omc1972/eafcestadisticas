@@ -17,6 +17,8 @@ type Plantilla = {
     campeonato: { nombre: string } | null;
     num_jugadores: number;
     media_promedio: number | null;
+    media_titulares: number | null;
+    titulares: { nombre: string; media: number | null }[];
 };
 
 interface Props {
@@ -118,21 +120,35 @@ const Index: React.FC<Props> = ({ plantillas }) => {
                                         )}
 
                                         {/* Media */}
-                                        <div className="mt-1">
-                                            <span
-                                                className={`text-lg font-bold ${getMediaColor(plantilla.media_promedio)}`}
-                                            >
-                                                {plantilla.media_promedio !== null
-                                                    ? plantilla.media_promedio
-                                                    : "-"}
+                                        <div className="flex items-baseline gap-1 mt-1">
+                                            <span className={`text-lg font-bold ${getMediaColor(plantilla.media_titulares ?? plantilla.media_promedio)}`}>
+                                                {(plantilla.media_titulares ?? plantilla.media_promedio) ?? "-"}
                                             </span>
-                                            <span className="text-xs text-muted-foreground ml-1">media</span>
+                                            <span className="text-xs text-muted-foreground">
+                                                {plantilla.media_titulares ? "media 11" : "media"}
+                                            </span>
                                         </div>
 
                                         {/* Jugadores */}
                                         <p className="text-xs text-muted-foreground">
                                             {plantilla.num_jugadores} jugadores
                                         </p>
+
+                                        {/* Alineación titular */}
+                                        {plantilla.titulares.length > 0 && (
+                                            <div className="w-full mt-1 pt-1.5 border-t border-border/40 space-y-0.5">
+                                                {plantilla.titulares.map((j, i) => (
+                                                    <div key={i} className="flex items-center justify-between gap-1">
+                                                        <span className="text-[10px] text-muted-foreground truncate leading-tight">
+                                                            {j.nombre}
+                                                        </span>
+                                                        <span className={`text-[10px] font-semibold shrink-0 ${getMediaColor(j.media)}`}>
+                                                            {j.media ?? "-"}
+                                                        </span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
 
                                         {/* Acciones */}
                                         <div
