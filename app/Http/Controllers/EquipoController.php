@@ -143,53 +143,42 @@ class EquipoController extends Controller
             ->get()
             ->keyBy('jugador_id');
 
-        // Calcular minutos jugados para cada jugador
-        $minutosStats = [];
+        // Calcular minutos jugados para cada jugador (una sola consulta en lugar de N)
         $alineaciones = DB::table('alineacions as a')
             ->join('partidos as pa', 'pa.id', '=', 'a.partido_id')
             ->where('pa.equipo_id', $equipo->id)
             ->select('a.jugador_id', 'a.partido_id', 'pa.minutos_jugados')
             ->get();
 
+        $partidoIds = $alineaciones->pluck('partido_id')->unique()->values();
+
+        $eventosCambios = DB::table('eventos as e')
+            ->join('tipo_eventos as te', 'te.id', '=', 'e.tipo_evento_id')
+            ->whereIn('e.partido_id', $partidoIds)
+            ->whereIn('te.nombre', ['Entra', 'Sale', 'TR Realizada'])
+            ->select('e.jugador_id', 'e.partido_id', 'te.nombre', 'e.minuto')
+            ->get()
+            ->groupBy(fn($e) => $e->jugador_id . '_' . $e->partido_id);
+
+        $minutosStats = [];
         foreach ($alineaciones as $alineacion) {
-            // Obtener eventos de este jugador en este partido
-            $eventos = DB::table('eventos')
-                ->where('jugador_id', $alineacion->jugador_id)
-                ->where('partido_id', $alineacion->partido_id)
-                ->join('tipo_eventos', 'eventos.tipo_evento_id', '=', 'tipo_eventos.id')
-                ->select('tipo_eventos.nombre', 'eventos.minuto')
-                ->get();
+            $key = $alineacion->jugador_id . '_' . $alineacion->partido_id;
+            $eventos = $eventosCambios->get($key, collect());
 
-            $entra = null;
-            $sale = null;
+            $entra = $eventos->firstWhere('nombre', 'Entra')?->minuto;
+            $sale  = $eventos->first(fn($e) => in_array($e->nombre, ['Sale', 'TR Realizada']))?->minuto;
 
-            foreach ($eventos as $evento) {
-                if ($evento->nombre === 'Entra') {
-                    $entra = $evento->minuto;
-                } elseif ($evento->nombre === 'Sale' || $evento->nombre === 'TR Realizada') {
-                    $sale = $evento->minuto;
-                }
-            }
-
-            // Lógica de cálculo:
-            // - Sin eventos: jugó todo el partido (0 hasta minutos_jugados)
-            // - Solo Sale: jugó desde 0 hasta Sale
-            // - Solo Entra: jugó desde Entra hasta final
-            // - Entra y Sale: jugó desde Entra hasta Sale
             if ($entra === null && $sale === null) {
                 $minutosJugados = $alineacion->minutos_jugados;
-            } elseif ($entra === null && $sale !== null) {
+            } elseif ($entra === null) {
                 $minutosJugados = $sale;
-            } elseif ($entra !== null && $sale === null) {
+            } elseif ($sale === null) {
                 $minutosJugados = $alineacion->minutos_jugados - $entra;
             } else {
                 $minutosJugados = $sale - $entra;
             }
-            
-            if (!isset($minutosStats[$alineacion->jugador_id])) {
-                $minutosStats[$alineacion->jugador_id] = 0;
-            }
-            $minutosStats[$alineacion->jugador_id] += $minutosJugados;
+
+            $minutosStats[$alineacion->jugador_id] = ($minutosStats[$alineacion->jugador_id] ?? 0) + $minutosJugados;
         }
 
         // Combinar todas las colecciones
