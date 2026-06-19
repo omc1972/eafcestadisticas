@@ -9,6 +9,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import AccionesTabla from "@/components/acciones-tabla";
 import ControlesPaginacion from "@/components/controles-paginacion";
 
+type Titular = { nombre: string; media: number | null; posicion: string | null };
+
 type Plantilla = {
     id: number;
     equipo: { id: number; nombre: string; escudo: string | null };
@@ -18,8 +20,20 @@ type Plantilla = {
     num_jugadores: number;
     media_promedio: number | null;
     media_titulares: number | null;
-    titulares: { nombre: string; media: number | null }[];
+    titulares: Titular[];
 };
+
+const DEFENSAS  = ['DFI','DFC','LI','LD','DFD'];
+const MEDIOS    = ['MC','MCO','MCD','MD','MI'];
+const DELANTEROS = ['ED','DC','EI'];
+
+function posicionColor(pos: string | null): string {
+    if (pos === 'POR')              return 'text-amber-400';
+    if (DEFENSAS.includes(pos!))    return 'text-blue-400';
+    if (MEDIOS.includes(pos!))      return 'text-green-400';
+    if (DELANTEROS.includes(pos!))  return 'text-red-400';
+    return 'text-muted-foreground';
+}
 
 interface Props {
     plantillas: Plantilla[];
@@ -149,8 +163,11 @@ const Index: React.FC<Props> = ({ plantillas }) => {
                                         {plantilla.titulares.length > 0 && (
                                             <div className="w-full mt-1 pt-1.5 border-t border-border/40 space-y-0.5">
                                                 {plantilla.titulares.map((j, i) => (
-                                                    <div key={i} className="flex items-center justify-between gap-1">
-                                                        <span className="text-[10px] text-muted-foreground truncate leading-tight">
+                                                    <div key={i} className="flex items-center gap-1">
+                                                        <span className={`text-[9px] font-bold uppercase shrink-0 w-7 ${posicionColor(j.posicion)}`}>
+                                                            {j.posicion ?? "—"}
+                                                        </span>
+                                                        <span className="text-[10px] text-muted-foreground truncate leading-tight flex-1">
                                                             {j.nombre}
                                                         </span>
                                                         <span className={`text-[10px] font-semibold shrink-0 ${getMediaColor(j.media)}`}>

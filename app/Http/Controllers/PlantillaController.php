@@ -21,8 +21,19 @@ class PlantillaController extends Controller
     {
         $plantillas = Plantilla::with(['equipo', 'temporada', 'jugadores', 'campeonato', 'liga'])->get();
 
-        $plantillasData = $plantillas->map(function ($plantilla) {
-            $titulares = $plantilla->jugadores->filter(fn($j) => $j->pivot->es_titular);
+        $posicionOrden = static function (string $pos): int {
+            return match (true) {
+                $pos === 'POR'                              => 0,
+                in_array($pos, ['DFI','DFC','LI','LD','DFD']) => 1,
+                in_array($pos, ['MC','MCO','MCD','MD','MI']) => 2,
+                in_array($pos, ['ED','DC','EI'])             => 3,
+                default                                      => 4,
+            };
+        };
+
+        $plantillasData = $plantillas->map(function ($plantilla) use ($posicionOrden) {
+            $titulares = $plantilla->jugadores->filter(fn($j) => $j->pivot->es_titular)
+                ->sortBy(fn($j) => $posicionOrden($j->posicion ?? ''));
             $mediaPromedio = $plantilla->jugadores->count() > 0
                 ? round($plantilla->jugadores->avg('media'), 1)
                 : null;
@@ -43,8 +54,9 @@ class PlantillaController extends Controller
                 'media_promedio' => $mediaPromedio,
                 'media_titulares' => $mediaTitulares,
                 'titulares' => $titulares->map(fn($j) => [
-                    'nombre' => $j->nombre,
-                    'media'  => $j->media,
+                    'nombre'   => $j->nombre,
+                    'media'    => $j->media,
+                    'posicion' => $j->posicion,
                 ])->values(),
             ];
         });
