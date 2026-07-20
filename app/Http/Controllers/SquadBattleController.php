@@ -95,7 +95,6 @@ class SquadBattleController extends Controller
 
             $estadisticas = [];
             foreach ($divisionEquipoIds as $eqId) {
-                $equipoPlantilla = $plantillasMap[$eqId] ?? null;
                 $equipo = Equipo::find($eqId);
 
                 $stats = [
@@ -228,5 +227,174 @@ class SquadBattleController extends Controller
     {
         $squadBattle->delete();
         return redirect()->route('squad-battles.index')->with('success', 'Squad Battle eliminado correctamente');
+    }
+
+    public function jugadores(SquadBattle $squadBattle, $divisionId)
+    {
+        $division = $squadBattle->divisiones()->findOrFail($divisionId);
+        $divisionEquipoIds = $division->rivales->pluck('equipo_id')->toArray();
+
+        $plantillas = Plantilla::whereIn('equipo_id', $divisionEquipoIds)
+            ->with(['equipo', 'jugadores'])
+            ->get();
+
+        $partidos = \App\Models\Partido::query()
+            ->whereIn('equipo_id', $divisionEquipoIds)
+            ->whereIn('visitante_id', $divisionEquipoIds)
+            ->with(['alineaciones.jugador', 'eventos'])
+            ->orderBy('jornada', 'asc')
+            ->get();
+
+        $jugadores = [];
+        foreach ($plantillas as $plantilla) {
+            $equipoId = $plantilla->equipo_id;
+            foreach ($plantilla->jugadores as $jugador) {
+                $jugadorId = $jugador->id;
+                if (!isset($jugadores[$jugadorId])) {
+                    $jugadores[$jugadorId] = [
+                        'jugador' => ['id' => $jugador->id, 'nombre' => $jugador->nombre, 'posicion' => $jugador->posicion],
+                        'equipo' => $plantilla->equipo->nombre,
+                        'goles' => 0,
+                        'asistencias' => 0,
+                        'tiros' => 0,
+                        'tiros_a_puerta' => 0,
+                        'tiros_al_palo' => 0,
+                        'pases' => 0,
+                        'pases_exitosos' => 0,
+                        'entradas' => 0,
+                        'entradas_exitosas' => 0,
+                        'regates' => 0,
+                        'regates_exitosos' => 0,
+                        'posesion_ganada' => 0,
+                        'posesion_perdida' => 0,
+                        'tarjetas_amarillas' => 0,
+                        'tarjetas_rojas' => 0,
+                        'distancia_recorrida' => 0,
+                        'rendimiento' => 0,
+                        'partidos_jugados' => 0,
+                        'minutos_jugados' => 0,
+                        'penalties_provocados' => 0,
+                        'faltas_cometidas' => 0,
+                        'faltas_recibidas' => 0,
+                        'fueras_de_juego' => 0,
+                        'paradas' => 0,
+                        'jugador_del_partido' => 0,
+                        'puntuacion_amonestaciones' => 0,
+                        'penalties_parados' => 0,
+                    ];
+                }
+            }
+        }
+
+        foreach ($partidos as $partido) {
+            foreach ($partido->alineaciones as $alineacion) {
+                $jugadorId = $alineacion->jugador_id;
+                if (!isset($jugadores[$jugadorId])) continue;
+                $esPortero = ($alineacion->jugador->posicion ?? null) === 'POR';
+
+                $jugadores[$jugadorId]['tiros'] += $alineacion->tiros ?? 0;
+                if (!$esPortero) {
+                    $jugadores[$jugadorId]['tiros_a_puerta'] += $alineacion->tiros_a_puerta ?? 0;
+                    $jugadores[$jugadorId]['tiros_al_palo'] += $alineacion->tiros_al_palo ?? 0;
+                }
+
+                $jugadores[$jugadorId]['pases'] += $alineacion->pases ?? 0;
+                $jugadores[$jugadorId]['pases_exitosos'] += $alineacion->pases_exitosos ?? 0;
+                $jugadores[$jugadorId]['entradas'] += $alineacion->entradas ?? 0;
+                $jugadores[$jugadorId]['entradas_exitosas'] += $alineacion->entradas_exitosas ?? 0;
+                $jugadores[$jugadorId]['regates'] += $alineacion->regates ?? 0;
+                $jugadores[$jugadorId]['regates_exitosos'] += $alineacion->regates_exitosos ?? 0;
+                $jugadores[$jugadorId]['posesion_ganada'] += $alineacion->posesion_ganada ?? 0;
+                $jugadores[$jugadorId]['posesion_perdida'] += $alineacion->posesion_perdida ?? 0;
+                $jugadores[$jugadorId]['distancia_recorrida'] += $alineacion->distancia_recorrida ?? 0;
+                $jugadores[$jugadorId]['rendimiento'] += $alineacion->rendimiento ?? 0;
+                $jugadores[$jugadorId]['faltas_cometidas'] += $alineacion->faltas_cometidas ?? 0;
+                $jugadores[$jugadorId]['faltas_recibidas'] += $alineacion->faltas_recibidas ?? 0;
+                $jugadores[$jugadorId]['fueras_de_juego'] += $alineacion->fueras_de_juego ?? 0;
+                $jugadores[$jugadorId]['jugador_del_partido'] += ($alineacion->jugador_del_partido ?? 0);
+                $jugadores[$jugadorId]['partidos_jugados']++;
+            }
+
+            $duracionPartido = $partido->minutos_jugados ?? 90;
+            foreach ($partido->alineaciones as $alineacion) {
+                $jugadorId = $alineacion->jugador_id;
+                if (!isset($jugadores[$jugadorId])) continue;
+
+                $eventoSale = $partido->eventos->first(function ($e) use ($jugadorId) {
+                    return $e->jugador_id == $jugadorId && $e->tipo_evento_id == \App\Models\TipoEvento::SALE;
+                });
+                $eventoEntra = $partido->eventos->first(function ($e) use ($jugadorId) {
+                    return $e->jugador_id == $jugadorId && $e->tipo_evento_id == \App\Models\TipoEvento::ENTRA;
+                });
+
+                if ($eventoEntra && $eventoSale) {
+                    $minutos = ($eventoSale->minuto ?? 0) - ($eventoEntra->minuto ?? 0);
+                } elseif ($eventoSale) {
+                    $minutos = $eventoSale->minuto ?? $duracionPartido;
+                } elseif ($eventoEntra) {
+                    $minutos = $duracionPartido - ($eventoEntra->minuto ?? 0);
+                } else {
+                    $minutos = $duracionPartido;
+                }
+                $jugadores[$jugadorId]['minutos_jugados'] += $minutos;
+
+                if ($alineacion->jugador->posicion == 'POR') {
+                    $tirosAPuertaRival = $partido->tiros_a_puerta_rival ?? 0;
+                    $golesEncajados = $partido->goles_rival ?? 0;
+                    $paradas = max(0, $tirosAPuertaRival - $golesEncajados);
+                    $jugadores[$jugadorId]['paradas'] += $paradas;
+                }
+            }
+
+            foreach ($partido->eventos as $evento) {
+                if ($evento->jugador_id == config('app.jugador_extra_id')) continue;
+                $jugadorId = $evento->jugador_id;
+                if (!isset($jugadores[$jugadorId])) continue;
+
+                if ($evento->tipo_evento_id == \App\Models\TipoEvento::GOL) {
+                    $jugadores[$jugadorId]['goles']++;
+                } elseif ($evento->tipo_evento_id == \App\Models\TipoEvento::ASISTENCIA) {
+                    $jugadores[$jugadorId]['asistencias']++;
+                } elseif ($evento->tipo_evento_id == \App\Models\TipoEvento::PENALTY_PROVOCADO) {
+                    $jugadores[$jugadorId]['penalties_provocados']++;
+                } elseif ($evento->tipo_evento_id == \App\Models\TipoEvento::TARJETA_AMARILLA) {
+                    $jugadores[$jugadorId]['tarjetas_amarillas']++;
+                    $jugadores[$jugadorId]['puntuacion_amonestaciones'] += 1;
+                } elseif ($evento->tipo_evento_id == \App\Models\TipoEvento::TARJETA_ROJA) {
+                    $jugadores[$jugadorId]['tarjetas_rojas']++;
+                    $jugadores[$jugadorId]['puntuacion_amonestaciones'] += 3;
+                } elseif ($evento->tipo_evento_id == \App\Models\TipoEvento::PENALTY_PARADO) {
+                    $jugadores[$jugadorId]['penalties_parados']++;
+                }
+            }
+        }
+
+        $jugadoresArray = array_values($jugadores);
+
+        return response()->json([
+            'topGoleadores' => collect($jugadoresArray)->sortByDesc('goles')->take(10)->values()->toArray(),
+            'topAsistentes' => collect($jugadoresArray)->sortByDesc('asistencias')->take(10)->values()->toArray(),
+            'topTirosAlPalo' => collect($jugadoresArray)->sortByDesc('tiros_al_palo')->take(10)->values()->toArray(),
+            'topPasadores' => collect($jugadoresArray)->sortByDesc('pases_exitosos')->take(10)->values()->toArray(),
+            'topAmarillas' => collect($jugadoresArray)->sortByDesc('tarjetas_amarillas')->take(10)->values()->toArray(),
+            'topMinutos' => collect($jugadoresArray)->sortByDesc('minutos_jugados')->take(10)->values()->toArray(),
+            'topRendimiento' => collect($jugadoresArray)->map(function ($j) {
+                $j['rendimiento_promedio'] = $j['partidos_jugados'] > 0 ? round($j['rendimiento'] / $j['partidos_jugados'], 2) : 0;
+                return $j;
+            })->sortByDesc('rendimiento_promedio')->take(10)->values()->toArray(),
+            'topKilometros' => collect($jugadoresArray)->sortByDesc('distancia_recorrida')->take(10)->values()->toArray(),
+            'topRecuperaciones' => collect($jugadoresArray)->sortByDesc('posesion_ganada')->take(10)->values()->toArray(),
+            'topPerdidas' => collect($jugadoresArray)->sortByDesc('posesion_perdida')->take(10)->values()->toArray(),
+            'topRegates' => collect($jugadoresArray)->sortByDesc('regates_exitosos')->take(10)->values()->toArray(),
+            'topPenaltiesProvocados' => collect($jugadoresArray)->sortByDesc('penalties_provocados')->take(10)->values()->toArray(),
+            'topFaltasCometidas' => collect($jugadoresArray)->sortByDesc('faltas_cometidas')->take(10)->values()->toArray(),
+            'topFaltasRecibidas' => collect($jugadoresArray)->sortByDesc('faltas_recibidas')->take(10)->values()->toArray(),
+            'topParadas' => collect($jugadoresArray)->filter(fn ($j) => $j['jugador']['posicion'] == 'POR')->sortByDesc('paradas')->take(10)->values()->toArray(),
+            'topFuerasJuego' => collect($jugadoresArray)->sortByDesc('fueras_de_juego')->take(10)->values()->toArray(),
+            'topMVP' => collect($jugadoresArray)->sortByDesc('jugador_del_partido')->take(10)->values()->toArray(),
+            'topAmonestados' => collect($jugadoresArray)->sortByDesc('puntuacion_amonestaciones')->take(10)->values()->toArray(),
+            'topRojas' => collect($jugadoresArray)->sortByDesc('tarjetas_rojas')->take(10)->values()->toArray(),
+            'topPenaltiesParados' => collect($jugadoresArray)->filter(fn ($j) => $j['jugador']['posicion'] == 'POR')->sortByDesc('penalties_parados')->take(10)->values()->toArray(),
+        ]);
     }
 }

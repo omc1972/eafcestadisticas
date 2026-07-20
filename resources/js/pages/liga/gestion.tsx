@@ -13,7 +13,6 @@ interface Equipo {
     codigo: string;
     escudo: string | null;
     estadio: { nombre: string } | null;
-    entrenador: { nombre: string } | null;
 }
 
 interface Plantilla {

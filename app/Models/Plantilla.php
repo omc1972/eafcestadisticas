@@ -12,11 +12,17 @@ class Plantilla extends Model
         'liga_id',
         'campeonato_id',
         'orden_liga',
+        'entrenador_id',
     ];
 
     public function equipo()
     {
         return $this->belongsTo(Equipo::class);
+    }
+
+    public function entrenador()
+    {
+        return $this->belongsTo(Entrenador::class);
     }
 
     public function temporada()

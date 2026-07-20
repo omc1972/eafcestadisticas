@@ -6,6 +6,7 @@ import AppLayout from "@/layouts/app-layout";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import EstiloIcon from "@/components/estilo-icon";
+import { getStatsConfig, formatStatValue, getGroupOrder } from "@/lib/estadisticas";
 
 
 const getAge = (fechaNacimiento: string) => {
@@ -92,45 +93,6 @@ export default function View({ jugador, resumen }) {
     },
   ];
 
-  const statGroups = [
-    {
-      title: "Ofensivas",
-      stats: [
-        { key: "goles", label: "Goles" },
-        { key: "tiros_vs_puerta", label: "Tiros / A puerta" },
-        { key: "tiros_al_palo", label: "Tiros al palo" },
-        { key: "penalties_marcados", label: "Penalties marcados" },
-        { key: "asistencias", label: "Asistencias" },
-        { key: "pases", label: "Pases" },
-        { key: "regates", label: "Regates" },
-        { key: "faltas_recibidas", label: "Faltas recibidas" },
-        { key: "fueras_de_juego", label: "Fueras de juego" },
-      ],
-    },
-    {
-      title: "Defensivas",
-      stats: [
-        { key: "entradas", label: "Entradas" },
-        { key: "posesion_ganada", label: "Posesión ganada" },
-        { key: "posesion_perdida", label: "Posesión perdida" },
-        { key: "faltas_cometidas", label: "Faltas cometidas" },
-        { key: "penalties_realizados", label: "Penalties realizados" },
-        { key: "ta_r", label: "Tarjetas amarillas" },
-        { key: "tr_r", label: "Tarjetas rojas" },
-        { key: "distancia_recorrida", label: "Distancia recorrida (km)" },
-      ],
-    },
-    {
-      title: "Otros",
-      stats: [
-        { key: "partidos", label: "Partidos jugados" },
-        { key: "minutos", label: "Minutos jugados" },
-        { key: "rendimiento", label: "Rendimiento" },
-        { key: "jugador_del_partido", label: "Jugador del partido" },
-      ],
-    },
-  ];
-
   const breadcrumbs = [
     { label: "Inicio", href: "/" },
     { label: "Jugadores", href: "/jugadores" },
@@ -159,7 +121,7 @@ export default function View({ jugador, resumen }) {
           </Button>
         </div>
 
-        {/* Primera fila: 3 cards - Datos personales + 2 de estadísticas */}
+        {/* Primera fila: 3 cards - Datos personales + Estadísticas dinámicas */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
           {/* Card 1: Datos Personales */}
           <Card className="shadow-md rounded-2xl">
@@ -178,69 +140,72 @@ export default function View({ jugador, resumen }) {
             </CardContent>
           </Card>
 
-          {/* Card 2: Estadísticas Ofensivas */}
-          <Card className="shadow-md rounded-2xl">
-            <CardHeader>
-              <CardTitle className="text-lg font-semibold">Estadísticas Ofensivas</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2">
-                {statGroups[0].stats.map((stat) => (
-                  <li key={stat.key} className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">{stat.label}</span>
-                    <span className="font-bold">
-                      {stat.key === "tiros_vs_puerta"
-                        ? `${resumen.tiros_a_puerta} / ${resumen.tiros}`
-                        : stat.key === "regates"
-                        ? `${resumen.regates_exitosos} / ${resumen.regates}`
-                        : stat.key === "pases"
-                        ? `${resumen.pases_exitosos} / ${resumen.pases}`
-                        : stat.key === "penalties_marcados"
-                        ? `${resumen.penalties_marcados} / ${resumen.penalties_marcados+resumen.penalties_fallados}`
-                        : resumen[stat.key]}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-
-          {/* Card 3: Estadísticas Defensivas + Otros */}
-          <Card className="shadow-md rounded-2xl">
-            <CardHeader>
-              <CardTitle className="text-lg font-semibold">Estadísticas Defensivas</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2">
-                {statGroups[1].stats.map((stat) => (
-                  <li key={stat.key} className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">{stat.label}</span>
-                    <span className="font-bold">
-                      {stat.key === "entradas"
-                        ? `${resumen.entradas_exitosas} / ${resumen.entradas}`
-                        : stat.key === "distancia_recorrida"
-                        ? resumen[stat.key].toFixed(1)
-                        : resumen[stat.key]}
-                    </span>
-                  </li>
-                ))}
-                <Separator className="my-3" />
-                {statGroups[2].stats.map((stat) => (
-                  <li key={stat.key} className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">{stat.label}</span>
-                    <span className="font-bold">
-                      {stat.key === "rendimiento"
-                        ? (resumen[stat.key]/(resumen.partidos?resumen.partidos:1)).toFixed(1)
-                        : resumen[stat.key]}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
+          {/* Cards 2-4: Estadísticas dinámicas por grupo */}
+          {(() => {
+            const statsConfig = getStatsConfig(jugador.posicion);
+            const groupOrder = getGroupOrder();
+            // Mostrar 2 grupos por card (primeros 2 grupos)
+            const groupsToShow = groupOrder.slice(0, 2);
+            
+            return groupsToShow.map((groupKey, idx) => {
+              const group = statsConfig[groupKey];
+              return (
+                <Card key={groupKey} className="shadow-md rounded-2xl">
+                  <CardHeader>
+                    <CardTitle className="text-lg font-semibold">{group.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-2">
+                      {group.stats.map((stat) => (
+                        <li key={stat.field} className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">{stat.label}</span>
+                          <span className="font-bold">
+                            {formatStatValue((resumen as any)[stat.field], stat.format)}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              );
+            });
+          })()}
         </div>
 
-        {/* Segunda fila: Características del jugador en 3 columnas */}
+        {/* Segunda fila: Más estadísticas dinámicas */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          {(() => {
+            const statsConfig = getStatsConfig(jugador.posicion);
+            const groupOrder = getGroupOrder();
+            // Mostrar grupos del 2 en adelante
+            const groupsToShow = groupOrder.slice(2);
+            
+            return groupsToShow.map((groupKey) => {
+              const group = statsConfig[groupKey];
+              return (
+                <Card key={groupKey} className="shadow-md rounded-2xl">
+                  <CardHeader>
+                    <CardTitle className="text-lg font-semibold">{group.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-2">
+                      {group.stats.map((stat) => (
+                        <li key={stat.field} className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">{stat.label}</span>
+                          <span className="font-bold">
+                            {formatStatValue((resumen as any)[stat.field], stat.format)}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              );
+            });
+          })()}
+        </div>
+
+        {/* Tercera fila: Características del jugador en 3 columnas */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Características con barras de progreso */}
           {caracteristicas.map((bloque, i) => (

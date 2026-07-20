@@ -17,9 +17,10 @@ type Props = {
   temporadas: { id: number; nombre: string }[];
   campeonatos: { id: number; nombre: string }[];
   jugadores: { id: number; nombre: string }[];
+  entrenadores: { id: number; nombre: string }[];
 };
 
-const Create: React.FC<Props> = ({ equipos, temporadas, campeonatos, jugadores }) => {
+const Create: React.FC<Props> = ({ equipos, temporadas, campeonatos, jugadores, entrenadores }) => {
 
     const equiposOptions = equipos.map(e => ({
         value : e.id,
@@ -32,6 +33,7 @@ const Create: React.FC<Props> = ({ equipos, temporadas, campeonatos, jugadores }
       label : t.nombre
     }));
     const campeonatosOptions = campeonatos.map(c => ({ value: c.id, label: c.nombre }));
+    const entrenadoresOptions = entrenadores.map(e => ({ value: e.id, label: e.nombre }));
 
      const fields = [
         { 
@@ -45,6 +47,12 @@ const Create: React.FC<Props> = ({ equipos, temporadas, campeonatos, jugadores }
             label : "Temporada",
             type : "select",
             options : temporadasOptions
+        },
+        {
+            name: "entrenador_id",
+            label: "Entrenador",
+            type: "select",
+            options: entrenadoresOptions
         },
         {
             name: "campeonato_id",
@@ -82,6 +90,7 @@ const Create: React.FC<Props> = ({ equipos, temporadas, campeonatos, jugadores }
             initialValues={{
               jugador_id: 0,
               equipo_id: 0,
+              entrenador_id: 0,
               campeonato_id: campeonatosOptions.length > 0 ? campeonatosOptions[0].value : null,
             }}
             onSuccess={() => console.log("Plantilla creada con éxito")}

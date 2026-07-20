@@ -194,13 +194,8 @@ const Create: React.FC<Props> = ({ temporadas, competiciones }) => {
         rivalEquipoIdNum = visitante_equipo_id ? Number(visitante_equipo_id) : (visitanteEsRival ? null : (selectedRival ? Number(selectedRival) : null));
       }
 
-      // Solo los titulares se cargan como filas iniciales; el resto están disponibles en el select
-      const alineacionesInit = (plantillaEquipo || [])
-        .filter((j: any) => j.es_titular)
-        .map((j: any) => buildRow(equipoIdNum, j.id));
-      const alineacionesRivalInit = (plantillaRival || [])
-        .filter((j: any) => j.es_titular)
-        .map((j: any) => buildRow(rivalEquipoIdNum, j.id));
+      const alineacionesInit = (plantillaEquipo || []).map((j: any) => buildRow(equipoIdNum, j.id));
+      const alineacionesRivalInit = (plantillaRival || []).map((j: any) => buildRow(rivalEquipoIdNum, j.id));
 
       setInitialAlineaciones(alineacionesInit);
       setInitialAlineacionesRival(alineacionesRivalInit);

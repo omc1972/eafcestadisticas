@@ -33,6 +33,7 @@ interface DynamicFormProps {
   cancel: string;
   initialValues?: Record<string, any>;
   onSuccess?: () => void;
+  onFieldChange?: (fieldName: string, value: any) => void;
 }
 
 const DynamicForm: React.FC<DynamicFormProps> = ({
@@ -42,6 +43,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
   cancel,
   initialValues = {},
   onSuccess,
+  onFieldChange,
 }) => {
   const { data, setData, errors, processing, post, put, patch } = useForm(initialValues);
 
@@ -98,8 +100,9 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
                         checked={(data[field.name] ?? []).includes(opt.value)}
                         onCheckedChange={(checked) => {
                           const current: any[] = data[field.name] ?? [];
-                          if (checked) setData(field.name, [...current, opt.value]);
-                          else setData(field.name, current.filter((v) => v !== opt.value));
+                          const newValue = checked ? [...current, opt.value] : current.filter((v) => v !== opt.value);
+                          setData(field.name, newValue);
+                          onFieldChange?.(field.name, newValue);
                         }}
                       />
                       <label htmlFor={`${field.name}-${opt.value}`} className="text-sm">
@@ -134,7 +137,11 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
                 <label className="block font-medium mb-1">{field.label}</label>
                 <ShadSelect
                   value={getSelectValue(data[field.name])}
-                  onValueChange={(value) => setData(field.name, parseSelectValue(field, value))}
+                  onValueChange={(value) => {
+                    const parsedValue = parseSelectValue(field, value);
+                    setData(field.name, parsedValue);
+                    onFieldChange?.(field.name, parsedValue);
+                  }}
                   disabled={Boolean((field as any).disabled)}
                 >
                   <SelectTrigger className="w-full">
@@ -160,7 +167,10 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
               <Input
                 type={field.type}
                 value={data[field.name] ?? ""}
-                onChange={(e) => setData(field.name, e.target.value)}
+                onChange={(e) => {
+                  setData(field.name, e.target.value);
+                  onFieldChange?.(field.name, e.target.value);
+                }}
                 disabled={Boolean((field as any).disabled)}
               />
               {errors[field.name] && <p className="text-red-500 text-sm mt-1">{errors[field.name]}</p>}

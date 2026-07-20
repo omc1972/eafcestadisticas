@@ -13,7 +13,6 @@ class Equipo extends Model
         'liga',
         'equipacion_id',
         'estadio_id',
-        'entrenador_id',
         'liga_id',
         'escudo'
     ];
@@ -21,11 +20,6 @@ class Equipo extends Model
     public function liga()
     {
         return $this->belongsTo(Liga::class);
-    }
-
-    public function entrenador()
-    {
-        return $this->belongsTo(Entrenador::class, 'entrenador_id');
     }
 
     public function equipacion()

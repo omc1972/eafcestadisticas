@@ -324,6 +324,139 @@ const OrdenJuegoTab: React.FC<{
   );
 };
 
+interface JugadorEstadistica {
+  jugador: { id: number; nombre: string; posicion: string };
+  equipo: string;
+  goles: number;
+  asistencias: number;
+  tiros: number;
+  tiros_a_puerta: number;
+  tiros_al_palo: number;
+  pases: number;
+  pases_exitosos: number;
+  regates_exitosos: number;
+  posesion_ganada: number;
+  posesion_perdida: number;
+  distancia_recorrida: number;
+  tarjetas_amarillas: number;
+  tarjetas_rojas: number;
+  partidos_jugados: number;
+  minutos_jugados: number;
+  rendimiento: number;
+  rendimiento_promedio?: number;
+  penalties_provocados: number;
+  faltas_cometidas: number;
+  faltas_recibidas: number;
+  paradas: number;
+  fueras_de_juego: number;
+  jugador_del_partido: number;
+  puntuacion_amonestaciones: number;
+  penalties_parados: number;
+}
+
+interface JugadoresData {
+  topGoleadores: JugadorEstadistica[];
+  topAsistentes: JugadorEstadistica[];
+  topTirosAlPalo: JugadorEstadistica[];
+  topPasadores: JugadorEstadistica[];
+  topAmarillas: JugadorEstadistica[];
+  topMinutos: JugadorEstadistica[];
+  topRendimiento: JugadorEstadistica[];
+  topKilometros: JugadorEstadistica[];
+  topRecuperaciones: JugadorEstadistica[];
+  topPerdidas: JugadorEstadistica[];
+  topRegates: JugadorEstadistica[];
+  topPenaltiesProvocados: JugadorEstadistica[];
+  topFaltasCometidas: JugadorEstadistica[];
+  topFaltasRecibidas: JugadorEstadistica[];
+  topParadas: JugadorEstadistica[];
+  topFuerasJuego: JugadorEstadistica[];
+  topMVP: JugadorEstadistica[];
+  topAmonestados: JugadorEstadistica[];
+  topRojas: JugadorEstadistica[];
+  topPenaltiesParados: JugadorEstadistica[];
+}
+
+const TopJugadoresTable: React.FC<{ data: JugadorEstadistica[]; field: keyof JugadorEstadistica; label: string; colorClass: string }> = ({ data, field, label, colorClass }) => (
+  <Table className="text-xs">
+    <TableHeader><TableRow><TableHead className="w-8">#</TableHead><TableHead>Jugador</TableHead><TableHead className="text-center">{label}</TableHead></TableRow></TableHeader>
+    <TableBody>
+      {data.map((jugador, index) => (
+        <TableRow key={jugador.jugador.id}>
+          <TableCell className="font-bold">{index + 1}</TableCell>
+          <TableCell>
+            <div className="text-sm">{jugador.jugador.nombre}</div>
+            <div className="text-xs text-muted-foreground">{jugador.equipo}</div>
+          </TableCell>
+          <TableCell className={`text-center font-bold ${colorClass}`}>{String(jugador[field] ?? 0)}</TableCell>
+        </TableRow>
+      ))}
+    </TableBody>
+  </Table>
+);
+
+const EstadisticasJugadoresTab: React.FC<{ jugadoresData: JugadoresData | null; loading: boolean }> = ({ jugadoresData, loading }) => {
+  if (loading) return <div className="text-center py-8 text-muted-foreground">Cargando estadísticas de jugadores...</div>;
+  if (!jugadoresData) return <div className="text-center py-8 text-muted-foreground">Haz clic en esta pestaña para cargar las estadísticas.</div>;
+
+  return (
+    <div className="space-y-8">
+      <div>
+        <h3 className="text-xl font-semibold mb-4 text-green-600">⚽ OFENSIVA</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <Card><CardHeader><CardTitle className="text-sm">🔥 Top 10 Goleadores</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topGoleadores} field="goles" label="Goles" colorClass="text-green-600" /></CardContent></Card>
+          <Card><CardHeader><CardTitle className="text-sm">👁️ Asistentes</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topAsistentes} field="asistencias" label="ASI" colorClass="text-blue-600" /></CardContent></Card>
+          <Card><CardHeader><CardTitle className="text-sm">🎯 Tiros al Palo</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topTirosAlPalo} field="tiros_al_palo" label="Palo" colorClass="text-amber-700" /></CardContent></Card>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-xl font-semibold mb-4 text-purple-600">🎮 JUEGO</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <Card><CardHeader><CardTitle className="text-sm">📊 Pasadores</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topPasadores} field="pases_exitosos" label="Pases" colorClass="text-purple-600" /></CardContent></Card>
+          <Card><CardHeader><CardTitle className="text-sm">💨 Regates</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topRegates} field="regates_exitosos" label="Regates" colorClass="text-cyan-600" /></CardContent></Card>
+          <Card><CardHeader><CardTitle className="text-sm">⏱️ Más Minutos</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topMinutos} field="minutos_jugados" label="Min" colorClass="text-indigo-600" /></CardContent></Card>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-xl font-semibold mb-4 text-blue-600">🛡️ DEFENSA</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <Card><CardHeader><CardTitle className="text-sm">🟩 Recuperaciones</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topRecuperaciones} field="posesion_ganada" label="Rec" colorClass="text-green-700" /></CardContent></Card>
+          <Card><CardHeader><CardTitle className="text-sm">🟥 Pérdidas</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topPerdidas} field="posesion_perdida" label="Pérdidas" colorClass="text-red-700" /></CardContent></Card>
+          <Card><CardHeader><CardTitle className="text-sm">🟨 Fueras de Juego</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topFuerasJuego} field="fueras_de_juego" label="FJ" colorClass="text-yellow-600" /></CardContent></Card>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-xl font-semibold mb-4 text-yellow-700">🟨 DISCIPLINA</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <Card><CardHeader><CardTitle className="text-sm">⚠️ Amarillas</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topAmarillas} field="tarjetas_amarillas" label="Amarillas" colorClass="text-yellow-600" /></CardContent></Card>
+          <Card><CardHeader><CardTitle className="text-sm">🟥 Rojas</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topRojas} field="tarjetas_rojas" label="Rojas" colorClass="text-red-600" /></CardContent></Card>
+          <Card><CardHeader><CardTitle className="text-sm">📝 Amonestaciones</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topAmonestados} field="puntuacion_amonestaciones" label="Am." colorClass="text-orange-600" /></CardContent></Card>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-xl font-semibold mb-4 text-purple-700">💪 FÍSICO</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <Card><CardHeader><CardTitle className="text-sm">⏰ Distancia</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topKilometros} field="distancia_recorrida" label="Km" colorClass="text-green-600" /></CardContent></Card>
+          <Card><CardHeader><CardTitle className="text-sm">⭐ Rendimiento</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topRendimiento} field="rendimiento_promedio" label="Rend" colorClass="text-blue-600" /></CardContent></Card>
+          <Card><CardHeader><CardTitle className="text-sm">🏆 MVP</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topMVP} field="jugador_del_partido" label="MVP" colorClass="text-amber-600" /></CardContent></Card>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-xl font-semibold mb-4 text-green-600">⚽ PENALTIES</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <Card><CardHeader><CardTitle className="text-sm">⚡ Provocados</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topPenaltiesProvocados} field="penalties_provocados" label="Prov" colorClass="text-green-600" /></CardContent></Card>
+          <Card><CardHeader><CardTitle className="text-sm">🧤 Porteros Parados</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topPenaltiesParados} field="penalties_parados" label="Parados" colorClass="text-blue-600" /></CardContent></Card>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const DivisionContent: React.FC<{
   division: Division;
   squadBattleId: number;
@@ -331,9 +464,22 @@ const DivisionContent: React.FC<{
   plantillasMap: Record<number, PlantillaInfo>;
   divisionData: DivisionData;
 }> = ({ division, squadBattleId, equipos, plantillasMap, divisionData }) => {
+  const [jugadoresData, setJugadoresData] = useState<JugadoresData | null>(null);
+  const [loadingJugadores, setLoadingJugadores] = useState(false);
+
   const deleteDiv = () => {
     if (confirm(`¿Eliminar la división "${division.nombre}"?`))
       router.delete(`/squad-battles/${squadBattleId}/divisiones/${division.id}`);
+  };
+
+  const handleTabChange = (value: string) => {
+    if (value === 'jugadores' && !jugadoresData && !loadingJugadores) {
+      setLoadingJugadores(true);
+      fetch(`/squad-battles/${squadBattleId}/divisiones/${division.id}/jugadores`)
+        .then((r) => r.json())
+        .then((data) => { setJugadoresData(data); setLoadingJugadores(false); })
+        .catch(() => setLoadingJugadores(false));
+    }
   };
 
   const totalEquipos = division.rivales.length;
@@ -351,11 +497,12 @@ const DivisionContent: React.FC<{
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="orden">
+      <Tabs defaultValue="orden" onValueChange={handleTabChange}>
         <TabsList>
           <TabsTrigger value="orden">Orden de Juego</TabsTrigger>
           <TabsTrigger value="clasificacion">Clasificación</TabsTrigger>
           <TabsTrigger value="equipos">Estadísticas Equipos</TabsTrigger>
+          <TabsTrigger value="jugadores">Estadísticas Jugadores</TabsTrigger>
         </TabsList>
 
         <TabsContent value="orden" className="mt-4">
@@ -368,6 +515,10 @@ const DivisionContent: React.FC<{
 
         <TabsContent value="equipos" className="mt-4">
           <EstadisticasEquiposTab stats={divisionData.estadisticas_equipos} />
+        </TabsContent>
+
+        <TabsContent value="jugadores" className="mt-4">
+          <EstadisticasJugadoresTab jugadoresData={jugadoresData} loading={loadingJugadores} />
         </TabsContent>
       </Tabs>
 

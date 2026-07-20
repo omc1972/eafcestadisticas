@@ -6,6 +6,7 @@ use App\Models\Plantilla;
 use App\Models\Equipo;
 use App\Models\Temporada;
 use App\Models\Jugador;
+use App\Models\Entrenador;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\Campeonato;
@@ -19,7 +20,7 @@ class PlantillaController extends Controller
      */
     public function index()
     {
-        $plantillas = Plantilla::with(['equipo', 'temporada', 'jugadores', 'campeonato', 'liga'])->get();
+        $plantillas = Plantilla::with(['equipo', 'temporada', 'jugadores', 'campeonato', 'liga', 'entrenador'])->get();
 
         $posicionOrden = static function (string $pos): int {
             return match (true) {
@@ -48,6 +49,7 @@ class PlantillaController extends Controller
                     'escudo' => $plantilla->equipo->escudo,
                 ],
                 'temporada' => ['nombre' => $plantilla->temporada->nombre],
+                'entrenador' => $plantilla->entrenador ? ['nombre' => $plantilla->entrenador->nombre] : null,
                 'liga' => $plantilla->liga ? ['nombre' => $plantilla->liga->nombre] : null,
                 'campeonato' => $plantilla->campeonato ? ['nombre' => $plantilla->campeonato->nombre] : null,
                 'num_jugadores' => $plantilla->jugadores->count(),
@@ -76,6 +78,7 @@ class PlantillaController extends Controller
             'temporadas' => Temporada::all(),
             'campeonatos' => Campeonato::all(),
             'jugadores' => Jugador::all(),
+            'entrenadores' => Entrenador::all(),
         ]);
     }
 
@@ -87,6 +90,7 @@ class PlantillaController extends Controller
         $validated = $request->validate([
             'equipo_id' => 'required|exists:equipos,id',
             'temporada_id' => 'required|exists:temporadas,id',
+            'entrenador_id' => 'nullable|exists:entrenadors,id',
             'jugadores' => 'nullable|array',
             'jugadores.*.jugador_id' => 'exists:jugadors,id',
             'jugadores.*.dorsal' => 'required|string',
@@ -96,6 +100,7 @@ class PlantillaController extends Controller
         $plantilla = Plantilla::create([
             'equipo_id' => $validated['equipo_id'],
             'temporada_id' => $validated['temporada_id'],
+            'entrenador_id' => $validated['entrenador_id'] ?? null,
             'campeonato_id' => $request->input('campeonato_id'),
         ]);
 
@@ -277,6 +282,7 @@ class PlantillaController extends Controller
             'temporadas' => Temporada::all(),
             'campeonatos' => Campeonato::all(),
             'jugadores' => Jugador::all(),
+            'entrenadores' => Entrenador::all(),
             'jugadoresPlantilla' => $jugadoresPlantilla,
         ]);
     }
@@ -289,6 +295,7 @@ class PlantillaController extends Controller
         $validated = $request->validate([
             'equipo_id' => 'required|exists:equipos,id',
             'temporada_id' => 'required|exists:temporadas,id',
+            'entrenador_id' => 'nullable|exists:entrenadors,id',
             'jugadores' => 'nullable|array',
             'jugadores.*.jugador_id' => 'exists:jugadors,id',
             'jugadores.*.dorsal' => 'required|string',
@@ -298,6 +305,7 @@ class PlantillaController extends Controller
         $plantilla->update([
             'equipo_id' => $validated['equipo_id'],
             'temporada_id' => $validated['temporada_id'],
+            'entrenador_id' => $validated['entrenador_id'] ?? null,
             'campeonato_id' => $request->input('campeonato_id'),
         ]);
 

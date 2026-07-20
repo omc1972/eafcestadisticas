@@ -6,7 +6,6 @@ import { type BreadcrumbItem } from "@/types";
 import DynamicForm from "@/components/forms/DynamicForm";
 
 interface Props {
-    entrenadores: { id: number; nombre: string }[];
     equipaciones: { id: number; nombre: string }[];
     estadios: { id: number; nombre: string }[];
     ligas: { id: number; nombre: string }[];
@@ -19,18 +18,12 @@ const breadcrumbs: BreadcrumbItem[] = [
   },
 ];
 
-const Create: React.FC<Props> = ({ entrenadores, equipaciones, estadios, ligas }) => {
+const Create: React.FC<Props> = ({ equipaciones, estadios, ligas }) => {
     const fields = [
         { name: "nombre", label: "Nombre", type: "text" },
         { name: "codigo", label: "Código", type: "text" },
         { name: "pais", label: "País", type: "text" },
         { name: "liga", label: "Liga (texto)", type: "text" },
-        {
-            name: "entrenador_id",
-            label: "Entrenador",
-            type: "select",
-            options: entrenadores.map(e => ({ label: e.nombre, value: e.id })),
-        },
         {
             name: "equipacion_id",
             label: "Equipación",
@@ -66,11 +59,9 @@ const Create: React.FC<Props> = ({ entrenadores, equipaciones, estadios, ligas }
                         codigo: "",
                         pais: "",
                         liga: "",
-                        entrenador_id: "",
                         equipacion_id: "",
                         estadio_id: "",
                         liga_id: "",
-                       
                     }}
                     onSuccess={() => console.log("Equipo creado con éxito")}
                 />

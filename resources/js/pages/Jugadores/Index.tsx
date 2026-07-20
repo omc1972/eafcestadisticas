@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import AccionesTabla from "@/components/acciones-tabla";
 import ControlesPaginacion from "@/components/controles-paginacion";
+import { getStatsConfig } from "@/lib/estadisticas";
 
 type Estilo = {
   id: number;
@@ -48,6 +49,17 @@ const Index: React.FC<Props> = ({ jugadores }) => {
   const [globalFilter, setGlobalFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 12;
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const page = params.get("page");
+    if (page) {
+      const pageNum = parseInt(page, 10);
+      if (pageNum > 0) {
+        setCurrentPage(pageNum);
+      }
+    }
+  }, []);
 
   // Filtrado por búsqueda
   const filtered = jugadores.filter(
@@ -100,6 +112,28 @@ const Index: React.FC<Props> = ({ jugadores }) => {
     );
   };
 
+  // Función para obtener labels dinámicos basados en posición
+  const getAttributeLabels = (posicion: string | null) => {
+    if (posicion === "POR") {
+      return [
+        { label: "VEL", key: "ritmo" },      // Velocidad
+        { label: "PAR", key: "tiro" },       // Parada
+        { label: "SAQ", key: "pase" },       // Saque
+        { label: "REF", key: "regate" },     // Reflejos
+        { label: "POS", key: "defensa" },    // Posición
+        { label: "SAL", key: "fisico" },     // Salto
+      ];
+    }
+    return [
+      { label: "RIT", key: "ritmo" },
+      { label: "TIR", key: "tiro" },
+      { label: "PAS", key: "pase" },
+      { label: "REG", key: "regate" },
+      { label: "DEF", key: "defensa" },
+      { label: "FIS", key: "fisico" },
+    ];
+  };
+
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Jugadores" />
@@ -127,10 +161,10 @@ const Index: React.FC<Props> = ({ jugadores }) => {
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {paginated.map((jugador) => (
-                <Card 
-                  key={jugador.id} 
+                <Card
+                  key={jugador.id}
                   className="hover:shadow-lg transition-shadow cursor-pointer"
-                  onClick={() => router.get(`/jugadores/${jugador.id}/edit`)}
+                  onClick={() => router.get(`/jugadores/${jugador.id}/edit?page=${currentPage}`)}
                 >
                   <CardHeader className="pb-3">
                     <div className="flex justify-between items-start">
@@ -149,21 +183,26 @@ const Index: React.FC<Props> = ({ jugadores }) => {
                           {jugador.media}
                         </div>
                         <div onClick={(e) => e.stopPropagation()}>
-                          <AccionesTabla 
-                            id={jugador.id} 
-                            basePath="/jugadores" 
+                          <AccionesTabla
+                            id={jugador.id}
+                            basePath="/jugadores"
+                            queryString={`?page=${currentPage}`}
                           />
                         </div>
                       </div>
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-2">
-                    <AttributeBar label="RIT" value={jugador.ritmo} />
-                    <AttributeBar label="TIR" value={jugador.tiro} />
-                    <AttributeBar label="PAS" value={jugador.pase} />
-                    <AttributeBar label="REG" value={jugador.regate} />
-                    <AttributeBar label="DEF" value={jugador.defensa} />
-                    <AttributeBar label="FIS" value={jugador.fisico} />
+                    {(() => {
+                      const labels = getAttributeLabels(jugador.posicion);
+                      return labels.map((attr) => (
+                        <AttributeBar
+                          key={attr.key}
+                          label={attr.label}
+                          value={jugador[attr.key as keyof typeof jugador] as number}
+                        />
+                      ));
+                    })()}
                     
                     {jugador.estilos && jugador.estilos.length > 0 && (
                       <div className="pt-2 mt-2 border-t border-gray-700">

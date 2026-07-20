@@ -12,12 +12,10 @@ interface Props {
         codigo: string;
         pais: string;
         liga: string;
-        entrenador_id: number;
         equipacion_id: number;
         estadio_id: number;
         liga_id: number | null;
     };
-    entrenadores: { id: number; nombre: string }[];
     equipaciones: { id: number; nombre: string }[];
     estadios: { id: number; nombre: string }[];
     ligas: { id: number; nombre: string }[];
@@ -30,18 +28,12 @@ const breadcrumbs: BreadcrumbItem[] = [
   },
 ];
 
-const Edit: React.FC<Props> = ({ equipo, entrenadores, equipaciones, estadios, ligas }) => {
+const Edit: React.FC<Props> = ({ equipo, equipaciones, estadios, ligas }) => {
     const fields = [
         { name: "nombre", label: "Nombre", type: "text" },
         { name: "codigo", label: "Código", type: "text" },
         { name: "pais", label: "País", type: "text" },
         { name: "liga", label: "Liga (texto)", type: "text" },
-        {
-            name: "entrenador_id",
-            label: "Entrenador",
-            type: "select",
-            options: entrenadores.map(e => ({ label: e.nombre, value: e.id })),
-        },
         {
             name: "equipacion_id",
             label: "Equipación",
@@ -77,7 +69,6 @@ const Edit: React.FC<Props> = ({ equipo, entrenadores, equipaciones, estadios, l
                         codigo: equipo.codigo,
                         pais: equipo.pais,
                         liga: equipo.liga,
-                        entrenador_id: equipo.entrenador_id.toString(),
                         equipacion_id: equipo.equipacion_id.toString(),
                         estadio_id: equipo.estadio_id.toString(),
                         liga_id: equipo.liga_id ? equipo.liga_id.toString() : "",

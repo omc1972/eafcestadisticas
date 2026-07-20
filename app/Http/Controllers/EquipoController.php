@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Equipo;
-use App\Models\Entrenador;
 use App\Models\Equipacion;
 use App\Models\Estadio;
 use App\Models\Liga;
@@ -18,7 +17,7 @@ class EquipoController extends Controller
      */
     public function index()
     {
-        $equipos = Equipo::with(['entrenador', 'equipacion', 'estadio'])->get();
+        $equipos = Equipo::with(['equipacion', 'estadio'])->get();
 
         return Inertia::render('Equipos/Index', [
             'equipos' => $equipos,
@@ -31,7 +30,6 @@ class EquipoController extends Controller
     public function create()
     {
         return Inertia::render('Equipos/Create', [
-            'entrenadores' => Entrenador::all(),
             'equipaciones' => Equipacion::all(),
             'estadios' => Estadio::all(),
             'ligas' => Liga::all(),
@@ -50,7 +48,6 @@ class EquipoController extends Controller
             'liga' => 'nullable|string|max:255',
             'equipacion_id' => 'required|exists:equipacions,id',
             'estadio_id' => 'required|exists:estadios,id',
-            'entrenador_id' => 'required|exists:entrenadors,id',
             'liga_id' => 'nullable|exists:ligas,id',
         ]);
 
@@ -65,7 +62,7 @@ class EquipoController extends Controller
      */
     public function show(Equipo $equipo)
     {
-        $equipo->load(['entrenador', 'equipacion', 'estadio']);
+        $equipo->load(['equipacion', 'estadio']);
 
         $partidosStats = DB::table('partidos')
             ->where('equipo_id', $equipo->id)
@@ -115,12 +112,20 @@ class EquipoController extends Controller
                 DB::raw('COUNT(DISTINCT pa.id) as partidos'),
                 DB::raw('COALESCE(SUM(CASE WHEN pa.id IS NOT NULL THEN a.tiros ELSE 0 END), 0) as tiros'),
                 DB::raw('COALESCE(SUM(CASE WHEN pa.id IS NOT NULL THEN a.tiros_a_puerta ELSE 0 END), 0) as tiros_a_puerta'),
+                DB::raw('COALESCE(SUM(CASE WHEN pa.id IS NOT NULL THEN a.tiros_al_palo ELSE 0 END), 0) as tiros_al_palo'),
                 DB::raw('COALESCE(SUM(CASE WHEN pa.id IS NOT NULL THEN a.pases ELSE 0 END), 0) as pases'),
                 DB::raw('COALESCE(SUM(CASE WHEN pa.id IS NOT NULL THEN a.pases_exitosos ELSE 0 END), 0) as pases_exitosos'),
                 DB::raw('COALESCE(SUM(CASE WHEN pa.id IS NOT NULL THEN a.entradas ELSE 0 END), 0) as entradas'),
                 DB::raw('COALESCE(SUM(CASE WHEN pa.id IS NOT NULL THEN a.entradas_exitosas ELSE 0 END), 0) as entradas_exitosas'),
                 DB::raw('COALESCE(SUM(CASE WHEN pa.id IS NOT NULL THEN a.regates ELSE 0 END), 0) as regates'),
                 DB::raw('COALESCE(SUM(CASE WHEN pa.id IS NOT NULL THEN a.regates_exitosos ELSE 0 END), 0) as regates_exitosos'),
+                DB::raw('COALESCE(SUM(CASE WHEN pa.id IS NOT NULL THEN a.posesion_ganada ELSE 0 END), 0) as posesion_ganada'),
+                DB::raw('COALESCE(SUM(CASE WHEN pa.id IS NOT NULL THEN a.posesion_perdida ELSE 0 END), 0) as posesion_perdida'),
+                DB::raw('COALESCE(SUM(CASE WHEN pa.id IS NOT NULL THEN a.faltas_cometidas ELSE 0 END), 0) as faltas_cometidas'),
+                DB::raw('COALESCE(SUM(CASE WHEN pa.id IS NOT NULL THEN a.faltas_recibidas ELSE 0 END), 0) as faltas_recibidas'),
+                DB::raw('COALESCE(SUM(CASE WHEN pa.id IS NOT NULL THEN a.fueras_de_juego ELSE 0 END), 0) as fueras_de_juego'),
+                DB::raw('COALESCE(SUM(CASE WHEN pa.id IS NOT NULL THEN a.distancia_recorrida ELSE 0 END), 0) as distancia_recorrida'),
+                DB::raw('COALESCE(AVG(CASE WHEN pa.id IS NOT NULL THEN a.posesion END), 0) as posesion'),
                 DB::raw('COALESCE(AVG(CASE WHEN pa.id IS NOT NULL THEN a.rendimiento END), 0) as rendimiento'),
                 DB::raw('COALESCE(SUM(CASE WHEN pa.id IS NOT NULL THEN a.jugador_del_partido ELSE 0 END), 0) as mvps'),
             ])
@@ -207,7 +212,6 @@ class EquipoController extends Controller
     {
         return Inertia::render('Equipos/Edit', [
             'equipo' => $equipo,
-            'entrenadores' => Entrenador::all(),
             'equipaciones' => Equipacion::all(),
             'estadios' => Estadio::all(),
             'ligas' => Liga::all(),
@@ -226,7 +230,6 @@ class EquipoController extends Controller
             'liga' => 'nullable|string|max:255',
             'equipacion_id' => 'required|exists:equipacions,id',
             'estadio_id' => 'required|exists:estadios,id',
-            'entrenador_id' => 'required|exists:entrenadors,id',
             'liga_id' => 'nullable|exists:ligas,id',
         ]);
 

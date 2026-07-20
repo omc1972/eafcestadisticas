@@ -13,6 +13,7 @@ interface AccionesTablaProps {
   showView?: boolean;
   showEdit?: boolean;
   showDelete?: boolean;
+  queryString?: string;
 }
 
 const AccionesTabla: React.FC<AccionesTablaProps> = ({
@@ -23,14 +24,15 @@ const AccionesTabla: React.FC<AccionesTablaProps> = ({
   onDelete,
   showView = true,
   showEdit = true,
-  showDelete = true
+  showDelete = true,
+  queryString = ""
 }) => {
   const handleView = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (onView) {
       onView();
     } else {
-      router.get(`${basePath}/${id}`);
+      router.get(`${basePath}/${id}${queryString}`);
     }
   };
 
@@ -39,7 +41,7 @@ const AccionesTabla: React.FC<AccionesTablaProps> = ({
     if (onEdit) {
       onEdit();
     } else {
-      router.get(`${basePath}/${id}/edit`);
+      router.get(`${basePath}/${id}/edit${queryString}`);
     }
   };
 

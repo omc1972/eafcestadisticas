@@ -16,6 +16,9 @@ use App\Http\Controllers\TemporadaLigaController;
 use App\Http\Controllers\LigaEstadisticasController;
 use App\Http\Controllers\CampeonatoController;
 use App\Http\Controllers\CompeticionController;
+use App\Http\Controllers\SquadBattleController;
+use App\Http\Controllers\RivalsBattleController;
+use App\Http\Controllers\DivisionController;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
@@ -68,6 +71,39 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/competiciones/{competicion}/temporadas/{temporada}/estadisticas', [\App\Http\Controllers\CompeticionEstadisticasController::class, 'showPage'])->name('competiciones.temporadas.estadisticas');
     Route::get('/campeonatos/{campeonato}/eliminatorias', [\App\Http\Controllers\EliminatoriaController::class, 'show'])->name('campeonatos.eliminatorias');
     Route::post('/campeonatos/{campeonato}/eliminatorias/sortear', [\App\Http\Controllers\EliminatoriaController::class, 'sortear'])->name('campeonatos.eliminatorias.sortear');
+
+    // Squad Battles
+    Route::resource('squad-battles', SquadBattleController::class)->parameters(['squad-battles' => 'squadBattle']);
+    Route::prefix('squad-battles/{squadBattle}')->group(function () {
+        Route::post('divisiones', [DivisionController::class, 'store'])->name('squad-battles.divisiones.store');
+        Route::put('divisiones/{division}', [DivisionController::class, 'update'])->name('squad-battles.divisiones.update');
+        Route::delete('divisiones/{division}', [DivisionController::class, 'destroy'])->name('squad-battles.divisiones.destroy');
+        Route::post('divisiones/{division}/equipos', [DivisionController::class, 'addEquipo'])->name('squad-battles.divisiones.addEquipo');
+        Route::delete('divisiones/{division}/equipos/{divisionRival}', [DivisionController::class, 'removeEquipo'])->name('squad-battles.divisiones.removeEquipo');
+        Route::patch('divisiones/{division}/orden', [DivisionController::class, 'updateOrden'])->name('squad-battles.divisiones.updateOrden');
+        Route::get('divisiones/{division}/jugadores', [SquadBattleController::class, 'jugadores'])->name('squad-battles.divisiones.jugadores');
+    });
+
+    // Rivals Battles
+    Route::resource('rivals-battles', RivalsBattleController::class)->parameters(['rivals-battles' => 'rivalsBattle']);
+    Route::prefix('rivals-battles/{rivalsBattle}')->group(function () {
+        Route::post('divisiones', [DivisionController::class, 'store'])->name('rivals-battles.divisiones.store');
+        Route::put('divisiones/{division}', [DivisionController::class, 'update'])->name('rivals-battles.divisiones.update');
+        Route::delete('divisiones/{division}', [DivisionController::class, 'destroy'])->name('rivals-battles.divisiones.destroy');
+        Route::post('divisiones/{division}/equipos', [DivisionController::class, 'addEquipo'])->name('rivals-battles.divisiones.addEquipo');
+        Route::delete('divisiones/{division}/equipos/{divisionRival}', [DivisionController::class, 'removeEquipo'])->name('rivals-battles.divisiones.removeEquipo');
+        Route::patch('divisiones/{division}/orden', [DivisionController::class, 'updateOrden'])->name('rivals-battles.divisiones.updateOrden');
+    });
+
+    // Rivales con divisiones
+    Route::prefix('rivales/{rival}')->group(function () {
+        Route::post('divisiones', [DivisionController::class, 'store'])->name('rivales.divisiones.store');
+        Route::put('divisiones/{division}', [DivisionController::class, 'update'])->name('rivales.divisiones.update');
+        Route::delete('divisiones/{division}', [DivisionController::class, 'destroy'])->name('rivales.divisiones.destroy');
+        Route::post('divisiones/{division}/equipos', [DivisionController::class, 'addEquipo'])->name('rivales.divisiones.addEquipo');
+        Route::delete('divisiones/{division}/equipos/{divisionRival}', [DivisionController::class, 'removeEquipo'])->name('rivales.divisiones.removeEquipo');
+        Route::patch('divisiones/{division}/orden', [DivisionController::class, 'updateOrden'])->name('rivales.divisiones.updateOrden');
+    });
 });
 
 require __DIR__.'/settings.php';

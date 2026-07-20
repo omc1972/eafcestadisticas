@@ -42,9 +42,8 @@ const Index: React.FC<Props> = ({ equipos }) => {
     const rowsPerPage = 10;
     const filtered = equipos.filter(
         (e) =>
-            e.nombre.toLowerCase().includes(globalFilter.toLowerCase()) ||
-            e.codigo.toLowerCase().includes(globalFilter.toLowerCase()) ||
-            e.usuario.toLowerCase().includes(globalFilter.toLowerCase())
+            (e.nombre ?? "").toLowerCase().includes(globalFilter.toLowerCase()) ||
+            (e.codigo ?? "").toLowerCase().includes(globalFilter.toLowerCase())
         );
     
     const paginated = filtered.slice(

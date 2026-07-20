@@ -1,0 +1,107 @@
+import React, { useState } from "react";
+import { Head, router } from "@inertiajs/react";
+import AppLayout from "@/layouts/app-layout";
+import { dashboard } from "@/routes";
+import { type BreadcrumbItem } from "@/types";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+} from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import AccionesTabla from "@/components/acciones-tabla";
+
+interface RivalsBattle {
+  id: number;
+  nombre: string;
+  temporada: { nombre: string } | null;
+  divisiones: { id: number }[];
+}
+
+interface Props {
+  rivalsBattles: RivalsBattle[];
+}
+
+const breadcrumbs: BreadcrumbItem[] = [
+  { title: "Dashboard", href: dashboard().url },
+  { title: "Rivals", href: "/rivals-battles" },
+];
+
+const Index: React.FC<Props> = ({ rivalsBattles }) => {
+  const [filter, setFilter] = useState("");
+
+  const filtered = rivalsBattles.filter((rb) =>
+    rb.nombre.toLowerCase().includes(filter.toLowerCase())
+  );
+
+  return (
+    <AppLayout breadcrumbs={breadcrumbs}>
+      <Head title="Rivals" />
+      <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
+        <h1 className="text-2xl font-bold mb-4">Rivals</h1>
+        <div className="flex justify-between items-center mb-4">
+          <Input
+            placeholder="Buscar..."
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            className="max-w-md"
+          />
+          <Button
+            onClick={() => router.get("/rivals-battles/create")}
+            className="bg-blue-600 text-white hover:bg-blue-700"
+          >
+            +
+          </Button>
+        </div>
+
+        {filtered.length > 0 ? (
+          <Table className="w-full">
+            <TableHeader>
+              <TableRow className="bg-gray-200">
+                <TableHead className="p-2 border">ID</TableHead>
+                <TableHead className="p-2 border">Nombre</TableHead>
+                <TableHead className="p-2 border">Temporada</TableHead>
+                <TableHead className="p-2 border">Divisiones</TableHead>
+                <TableHead className="p-2 border">Acciones</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filtered.map((rb, i) => (
+                <TableRow
+                  key={rb.id}
+                  className={`cursor-pointer ${i % 2 === 0 ? "bg-gray-800" : "bg-gray-750"}`}
+                  onClick={() => router.get(`/rivals-battles/${rb.id}`)}
+                >
+                  <TableCell className="p-2 border">{rb.id}</TableCell>
+                  <TableCell className="p-2 border">{rb.nombre}</TableCell>
+                  <TableCell className="p-2 border">
+                    {rb.temporada?.nombre ?? "—"}
+                  </TableCell>
+                  <TableCell className="p-2 border">
+                    {rb.divisiones.length}
+                  </TableCell>
+                  <TableCell onClick={(e) => e.stopPropagation()}>
+                    <AccionesTabla id={rb.id} basePath="/rivals-battles" />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-gray-500 text-lg">No hay Rivals registrados</p>
+            <p className="text-gray-400 text-sm">
+              Crea uno nuevo con el botón +
+            </p>
+          </div>
+        )}
+      </div>
+    </AppLayout>
+  );
+};
+
+export default Index;

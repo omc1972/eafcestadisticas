@@ -16,5 +16,8 @@ class Rival extends Model
         'fecha'
     ];
 
-
+    public function divisiones()
+    {
+        return $this->hasMany(Division::class)->orderBy('orden');
+    }
 }

@@ -15,6 +15,7 @@ type Plantilla = {
     id: number;
     equipo: { id: number; nombre: string; escudo: string | null };
     temporada: { nombre: string };
+    entrenador: { nombre: string } | null;
     liga: { nombre: string } | null;
     campeonato: { nombre: string } | null;
     num_jugadores: number;
@@ -176,6 +177,13 @@ const Index: React.FC<Props> = ({ plantillas }) => {
                                                     </div>
                                                 ))}
                                             </div>
+                                        )}
+
+                                        {/* Entrenador */}
+                                        {plantilla.entrenador && (
+                                            <p className="text-xs text-blue-300 text-center mt-1 font-semibold">
+                                                🎯 {plantilla.entrenador.nombre}
+                                            </p>
                                         )}
 
                                         {/* Acciones */}

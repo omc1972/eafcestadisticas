@@ -11,9 +11,10 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import squadBattles from '@/routes/squad-battles';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid, LayoutList, Users } from 'lucide-react';
+import { BookOpen, Folder, LayoutGrid, LayoutList, Users, Trophy, Shirt, Shield, Building, Goal, Swords, UserRound } from 'lucide-react';
 import AppLogo from './app-logo';
 
 import { route } from 'ziggy-js';
@@ -21,13 +22,11 @@ import { Ziggy } from '@/ziggy';
 
 const r = (name: string, params: Record<string, any> = {}) => {
     const url = route(name, params, undefined, Ziggy);
-    
-    // Si la URL no comienza con http, agregar el dominio completo
-    if (!url.startsWith('http')) {
-        return `${Ziggy.url}${url.startsWith('/') ? url : '/' + url}`;
+    // Devolver siempre ruta relativa para no forzar dominio/puerto
+    if (url.startsWith('http')) {
+        return new URL(url).pathname;
     }
-    
-    return url;
+    return url.startsWith('/') ? url : '/' + url;
 };
 
 const mainNavItems: NavItem[] = [
@@ -39,62 +38,72 @@ const mainNavItems: NavItem[] = [
     {
         title: 'Entrenadores',
         href: r('entrenadores.index'),
-        icon: Users,
-    },
-    {
-        title: 'Equipaciones',
-        href: r('equipaciones.index'),
-        icon: Users,
-    },
-    {
-        title: 'Estadios',
-        href: r('estadios.index'),
-        icon: Users,
+        icon: UserRound,
     },
     {
         title: 'Jugadores',
         href: r('jugadores.index'),
-        icon: Users,
+        icon: UserRound,
     },
+    {
+        title: 'Equipaciones',
+        href: r('equipaciones.index'),
+        icon: Shirt,
+    },
+    {
+        title: 'Estadios',
+        href: r('estadios.index'),
+        icon: Building,
+    },    
     {
         title: 'Equipos',
         href: r('equipos.index'),
-        icon: Users,
-    },
-    {
-        title: 'Ligas',
-        href: r('ligas.index'),
-        icon: Users,
+        icon: Shield,
     },
     {
         title: 'Rivales',
         href: r('rivales.index'),
-        icon: Users,
-    },
-    {
-        title: 'Temporadas',
-        href: r('temporadas.index'),
-        icon: Users,
+        icon: Shield,
     },
     {
         title: 'Plantillas',
         href: r('plantillas.index'),
-        icon: Users,
+        icon: Shield,
+    },
+    {
+        title: 'Competiciones',
+        href: r('competiciones.index'),
+        icon: Trophy,
+    },
+    {
+        title: 'Ligas',
+        href: r('ligas.index'),
+        icon: Trophy,
+    },
+    {
+        title: 'Temporadas',
+        href: r('temporadas.index'),
+        icon: Goal,
     },
     {
         title: 'Partidos',
         href: r('partidos.index'),
-        icon: Users,
+        icon: Swords,
     },
     {
         title: 'Campeonatos',
         href: r('campeonatos.index'),
-        icon: Users,
+        icon: Trophy,
     },
     {
-        title: 'Competiciones',
-        href: `${Ziggy.url}/competiciones`,
-        icon: Users,
+        title: 'Squad Battles',
+        href: squadBattles.index(),
+        icon: Trophy,
+    },
+    {
+        title: 'Rivals',
+        href: r('rivals-battles.index'),
+        icon: Trophy,
     },
 ];
 

@@ -4,6 +4,7 @@ import AppLayout from "@/layouts/app-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { type BreadcrumbItem } from "@/types";
+import { getStatsConfig, formatStatValue, getGroupOrder } from "@/lib/estadisticas";
 
 interface Equipo {
   id: number;
@@ -12,7 +13,6 @@ interface Equipo {
   pais?: string | null;
   liga?: string | null;
   escudo?: string | null;
-  entrenador?: { nombre: string } | null;
   estadio?: { nombre: string } | null;
   equipacion?: { nombre: string } | null;
 }
@@ -40,12 +40,20 @@ interface JugadorResumen {
   tarjetas_rojas: number;
   tiros: number;
   tiros_a_puerta: number;
+  tiros_al_palo: number;
   pases: number;
   pases_exitosos: number;
   entradas: number;
   entradas_exitosas: number;
   regates: number;
   regates_exitosos: number;
+  posesion_ganada: number;
+  posesion_perdida: number;
+  faltas_cometidas: number;
+  faltas_recibidas: number;
+  fueras_de_juego: number;
+  distancia_recorrida: number;
+  posesion: number;
   rendimiento: number;
   mvps: number;
 }
@@ -162,7 +170,6 @@ const View: React.FC<Props> = ({ equipo, partidosStats, partidosStatsPorCompetic
               <p><strong>Goles en contra:</strong> {partidosStats.goles_contra ?? 0}</p>
               <p><strong>Diferencia:</strong> {partidosStats.diferencia ?? 0}</p>
               <hr className="my-2" />
-              <p><strong>Entrenador:</strong> {equipo.entrenador?.nombre ?? "-"}</p>
               <p><strong>Estadio:</strong> {equipo.estadio?.nombre ?? "-"}</p>
               <p><strong>Equipación:</strong> {equipo.equipacion?.nombre ?? "-"}</p>
             </CardContent>
@@ -215,105 +222,60 @@ const View: React.FC<Props> = ({ equipo, partidosStats, partidosStatsPorCompetic
 
         <Card>
           <CardHeader>
-            <CardTitle>Plantilla y Resumen de Estadísticas</CardTitle>
+            <CardTitle>Plantilla y Estadísticas</CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="cursor-pointer" onClick={() => toggleSort("nombre")}>
-                      {sortLabel("Jugador", "nombre")}
-                    </TableHead>
-                    <TableHead className="cursor-pointer" onClick={() => toggleSort("posicion")}>
-                      {sortLabel("Pos", "posicion")}
-                    </TableHead>
-                    <TableHead className="cursor-pointer" onClick={() => toggleSort("dorsal")}>
-                      {sortLabel("Dorsal", "dorsal")}
-                    </TableHead>
-                    <TableHead className="cursor-pointer" onClick={() => toggleSort("partidos")}>
-                      {sortLabel("PJ", "partidos")}
-                    </TableHead>
-                    <TableHead className="cursor-pointer" onClick={() => toggleSort("minutos_jugados")}>
-                      {sortLabel("Min", "minutos_jugados")}
-                    </TableHead>
-                    <TableHead className="cursor-pointer" onClick={() => toggleSort("goles")}>
-                      {sortLabel("G", "goles")}
-                    </TableHead>
-                    <TableHead className="cursor-pointer" onClick={() => toggleSort("asistencias")}>
-                      {sortLabel("A", "asistencias")}
-                    </TableHead>
-                    <TableHead className="cursor-pointer" onClick={() => toggleSort("tarjetas_amarillas")}>
-                      {sortLabel("TA", "tarjetas_amarillas")}
-                    </TableHead>
-                    <TableHead className="cursor-pointer" onClick={() => toggleSort("tarjetas_rojas")}>
-                      {sortLabel("TR", "tarjetas_rojas")}
-                    </TableHead>
-                    <TableHead className="cursor-pointer" onClick={() => toggleSort("tiros")}>
-                      {sortLabel("T", "tiros")}
-                    </TableHead>
-                    <TableHead className="cursor-pointer" onClick={() => toggleSort("tiros_a_puerta")}>
-                      {sortLabel("TP", "tiros_a_puerta")}
-                    </TableHead>
-                    <TableHead className="cursor-pointer" onClick={() => toggleSort("pases")}>
-                      {sortLabel("P", "pases")}
-                    </TableHead>
-                    <TableHead className="cursor-pointer" onClick={() => toggleSort("pases_exitosos")}>
-                      {sortLabel("PE", "pases_exitosos")}
-                    </TableHead>
-                    <TableHead className="cursor-pointer" onClick={() => toggleSort("entradas")}>
-                      {sortLabel("E", "entradas")}
-                    </TableHead>
-                    <TableHead className="cursor-pointer" onClick={() => toggleSort("entradas_exitosas")}>
-                      {sortLabel("EEx", "entradas_exitosas")}
-                    </TableHead>
-                    <TableHead className="cursor-pointer" onClick={() => toggleSort("regates")}>
-                      {sortLabel("Rg", "regates")}
-                    </TableHead>
-                    <TableHead className="cursor-pointer" onClick={() => toggleSort("regates_exitosos")}>
-                      {sortLabel("RgEx", "regates_exitosos")}
-                    </TableHead>
-                    <TableHead className="cursor-pointer" onClick={() => toggleSort("rendimiento")}>
-                      {sortLabel("Ren", "rendimiento")}
-                    </TableHead>
-                    <TableHead className="cursor-pointer" onClick={() => toggleSort("mvps")}>
-                      {sortLabel("MVP", "mvps")}
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {jugadores.length > 0 ? (
-                    sortedJugadores.map((j) => (
-                      <TableRow key={j.id}>
-                        <TableCell>{j.nombre}</TableCell>
-                        <TableCell>{j.posicion}</TableCell>
-                        <TableCell>{j.dorsal ?? "-"}</TableCell>
-                        <TableCell>{j.partidos ?? 0}</TableCell>
-                        <TableCell>{j.minutos_jugados ?? 0}</TableCell>
-                        <TableCell>{j.goles ?? 0}</TableCell>
-                        <TableCell>{j.asistencias ?? 0}</TableCell>
-                        <TableCell>{j.tarjetas_amarillas ?? 0}</TableCell>
-                        <TableCell>{j.tarjetas_rojas ?? 0}</TableCell>
-                        <TableCell>{j.tiros ?? 0}</TableCell>
-                        <TableCell>{j.tiros_a_puerta ?? 0}</TableCell>
-                        <TableCell>{j.pases ?? 0}</TableCell>
-                        <TableCell>{j.pases_exitosos ?? 0}</TableCell>
-                        <TableCell>{j.entradas ?? 0}</TableCell>
-                        <TableCell>{j.entradas_exitosas ?? 0}</TableCell>
-                        <TableCell>{j.regates ?? 0}</TableCell>
-                        <TableCell>{j.regates_exitosos ?? 0}</TableCell>
-                        <TableCell>{Number(j.rendimiento ?? 0).toFixed(2)}</TableCell>
-                        <TableCell>{j.mvps ?? 0}</TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={19} className="text-center text-muted-foreground">
-                        No hay jugadores en la plantilla.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+            <div className="space-y-6">
+              {jugadores.length > 0 ? (
+                jugadores.map((j) => {
+                  const statsConfig = getStatsConfig(j.posicion);
+                  const groupOrder = getGroupOrder();
+                  
+                  return (
+                    <div key={j.id} className="border rounded-lg p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="font-bold text-lg min-w-8 h-8 flex items-center justify-center bg-blue-500 text-white rounded">
+                            {j.dorsal ?? "-"}
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-base">{j.nombre}</h3>
+                            <p className="text-sm text-muted-foreground">{j.posicion}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs text-muted-foreground">PJ / Min</p>
+                          <p className="text-sm font-semibold">{j.partidos ?? 0} / {j.minutos_jugados ?? 0}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 pt-2 border-t">
+                        {groupOrder.map((groupKey) => {
+                          const group = statsConfig[groupKey];
+                          return (
+                            <div key={groupKey} className="space-y-1">
+                              <p className="text-xs font-semibold text-muted-foreground uppercase">{group.title}</p>
+                              {group.stats.map((stat) => (
+                                <div key={stat.field} className="text-xs">
+                                  <span className="text-muted-foreground">{stat.label}:</span>
+                                  <span className="ml-1 font-semibold">
+                                    {formatStatValue((j as any)[stat.field], stat.format)}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  No hay jugadores en la plantilla.
+                </div>
+              )}
+            </div>
             </CardContent>
           </Card>
       </div>

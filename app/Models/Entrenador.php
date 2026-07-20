@@ -12,8 +12,8 @@ class Entrenador extends Model
         'tactica'
     ];
 
-    public function equipos()
+    public function plantillas()
     {
-        return $this->hasMany(Equipo::class, 'entrenador_id');
+        return $this->hasMany(Plantilla::class, 'entrenador_id');
     }
 }

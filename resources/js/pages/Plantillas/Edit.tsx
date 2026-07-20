@@ -21,6 +21,7 @@ interface Props {
     id: number;
     equipo_id: number;
     temporada_id: number;
+    entrenador_id?: number | null;
     campeonato_id?: number;
     jugadores: { id: number }[];
   };
@@ -28,6 +29,7 @@ interface Props {
   temporadas: { id: number; nombre: string }[];
   campeonatos: { id: number; nombre: string }[];
   jugadores: Jugador[];
+  entrenadores: { id: number; nombre: string }[];
   jugadoresPlantilla: PlantillaJugador[];
 }
 
@@ -35,12 +37,14 @@ const breadcrumbs: BreadcrumbItem[] = [
   { title: "Dashboard", href: dashboard().url },
 ];
 
-const Edit: React.FC<Props> = ({ plantilla, equipos, temporadas, campeonatos, jugadores, jugadoresPlantilla }) => {
+const Edit: React.FC<Props> = ({ plantilla, equipos, temporadas, campeonatos, jugadores, entrenadores, jugadoresPlantilla }) => {
     const campeonatosOptions = campeonatos.map(c => ({ value: c.id, label: c.nombre }));
+    const entrenadoresOptions = entrenadores.map(e => ({ value: e.id, label: e.nombre }));
 
     const fields = [
         { name: "equipo_id", label: "Equipo", type: "select", options: equipos.map(e => ({ label: e.nombre, value: e.id })) },
         { name: "temporada_id", label: "Temporada", type: "select", options: temporadas.map(t => ({ label: t.nombre, value: t.id })) },
+        { name: "entrenador_id", label: "Entrenador", type: "select", options: entrenadoresOptions },
         { name: "campeonato_id", label: "Campeonato", type: "select", options: campeonatosOptions },
         {
           name: "jugadores",
@@ -72,6 +76,7 @@ const Edit: React.FC<Props> = ({ plantilla, equipos, temporadas, campeonatos, ju
                     initialValues={{
                       equipo_id: plantilla.equipo_id,
                       temporada_id: plantilla.temporada_id,
+                      entrenador_id: plantilla.entrenador_id || 0,
                       campeonato_id: plantilla.campeonato_id || (campeonatosOptions.length > 0 ? campeonatosOptions[0].value : null),
                       jugadores: jugadoresPlantilla || [],
                     }}
