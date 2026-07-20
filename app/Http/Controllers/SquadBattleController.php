@@ -234,14 +234,24 @@ class SquadBattleController extends Controller
         $division = $squadBattle->divisiones()->findOrFail($divisionId);
         $divisionEquipoIds = $division->rivales->pluck('equipo_id')->toArray();
 
-        $plantillas = Plantilla::whereIn('equipo_id', $divisionEquipoIds)
-            ->with(['equipo', 'jugadores'])
-            ->get();
+        // Cargar plantillas para obtener datos básicos de jugadores
+        $plantillasQuery = Plantilla::with(['equipo', 'jugadores'])
+            ->whereIn('equipo_id', $divisionEquipoIds)
+            ->orderByDesc('id');
+
+        if ($squadBattle->temporada_id) {
+            $plantillasQuery->where('temporada_id', $squadBattle->temporada_id);
+        }
+
+        $plantillas = $plantillasQuery->get()
+            ->groupBy('equipo_id')
+            ->map(fn($grupo) => $grupo->sortByDesc(fn($p) => $p->jugadores->count())->first())
+            ->values();
 
         // Cargar partidos donde ambos equipos pertenecen a la división (sin rivales)
         $partidos = \App\Models\Partido::query()
-            ->where('local_es_rival', false)
-            ->where('visitante_es_rival', false)
+            ->where('local_es_rival', '!=', 1)
+            ->where('visitante_es_rival', '!=', 1)
             ->whereIn('equipo_id', $divisionEquipoIds)
             ->whereIn('visitante_id', $divisionEquipoIds)
             ->with(['alineaciones.jugador', 'eventos'])
