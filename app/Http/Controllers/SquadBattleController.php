@@ -248,12 +248,10 @@ class SquadBattleController extends Controller
             ->map(fn($grupo) => $grupo->sortByDesc(fn($p) => $p->jugadores->count())->first())
             ->values();
 
-        // Cargar partidos donde ambos equipos pertenecen a la división (sin rivales)
+        // Cargar partidos donde el equipo local está en la división
         $partidos = \App\Models\Partido::query()
             ->where('local_es_rival', '!=', 1)
-            ->where('visitante_es_rival', '!=', 1)
             ->whereIn('equipo_id', $divisionEquipoIds)
-            ->whereIn('visitante_id', $divisionEquipoIds)
             ->with(['alineaciones.jugador', 'eventos'])
             ->orderBy('jornada', 'asc')
             ->get();
