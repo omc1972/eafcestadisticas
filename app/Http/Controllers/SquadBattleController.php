@@ -229,7 +229,7 @@ class SquadBattleController extends Controller
         return redirect()->route('squad-battles.index')->with('success', 'Squad Battle eliminado correctamente');
     }
 
-    public function jugadores(SquadBattle $squadBattle, $divisionId)
+    public function jugadores(SquadBattle $squadBattle, int $divisionId)
     {
         $division = $squadBattle->divisiones()->findOrFail($divisionId);
         $divisionEquipoIds = $division->rivales->pluck('equipo_id')->toArray();
@@ -238,7 +238,10 @@ class SquadBattleController extends Controller
             ->with(['equipo', 'jugadores'])
             ->get();
 
+        // Cargar partidos donde ambos equipos pertenecen a la división (sin rivales)
         $partidos = \App\Models\Partido::query()
+            ->where('local_es_rival', false)
+            ->where('visitante_es_rival', false)
             ->whereIn('equipo_id', $divisionEquipoIds)
             ->whereIn('visitante_id', $divisionEquipoIds)
             ->with(['alineaciones.jugador', 'eventos'])
@@ -247,7 +250,6 @@ class SquadBattleController extends Controller
 
         $jugadores = [];
         foreach ($plantillas as $plantilla) {
-            $equipoId = $plantilla->equipo_id;
             foreach ($plantilla->jugadores as $jugador) {
                 $jugadorId = $jugador->id;
                 if (!isset($jugadores[$jugadorId])) {
