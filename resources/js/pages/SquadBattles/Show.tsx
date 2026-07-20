@@ -5,6 +5,7 @@ import { dashboard } from "@/routes";
 import { type BreadcrumbItem } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableHeader,
@@ -14,47 +15,43 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Trophy, Users, TrendingUp } from "lucide-react";
 
-interface Equipo { id: number; nombre: string }
-
+interface Equipo { id: number; nombre: string; codigo?: string; escudo?: string }
 interface DivisionEquipo { id: number; orden: number; equipo: Equipo }
+interface Division { id: number; nombre: string; orden: number; rivales: DivisionEquipo[] }
+interface SquadBattle { id: number; nombre: string; temporada: { nombre: string } | null; divisiones: Division[] }
+interface Jugador { id: number; nombre: string; media: number; es_titular: boolean }
+interface PlantillaInfo { id: number; equipo: Equipo; media_plantilla: number | null; media_alineacion: number | null; jugadores: Jugador[] }
 
-interface Division {
-  id: number;
-  nombre: string;
-  orden: number;
-  rivales: DivisionEquipo[];
-}
-
-interface SquadBattle {
-  id: number;
-  nombre: string;
-  temporada: { nombre: string } | null;
-  divisiones: Division[];
-}
-
-interface PlantillaInfo {
-  id: number;
-  media_plantilla: number | null;
-  media_alineacion: number | null;
-  jugadores: Jugador[];
-}
-
-interface Jugador {
-  id: number;
-  nombre: string;
-  media: number;
-  es_titular: boolean;
-}
-
-interface Standing {
-  pj: number; pg: number; pe: number; pp: number;
-  gf: number; gc: number; dif: number; pts: number;
+interface Estadistica {
+  equipo: Equipo;
+  partidos_jugados: number;
+  victorias: number;
+  empates: number;
+  derrotas: number;
+  goles_favor: number;
+  goles_contra: number;
+  diferencia_goles: number;
+  puntos: number;
+  tarjetas_amarillas: number;
+  tarjetas_rojas: number;
+  posesion_promedio: number;
+  tiros_al_palo: number;
+  tiros_realizados: number;
+  tiros_recibidos: number;
+  pases: number;
+  distancia_recorrida: number;
+  balones_ganados_equipo: number;
+  interceciones_equipo: number;
+  penalties_equipo: number;
+  penalties_rival: number;
 }
 
 interface DivisionData {
-  standingsMap: Record<number, Standing>;
-  jugadoresStats: Record<number, Jugador[]>;
+  estadisticas: Estadistica[];
+  estadisticas_equipos: Record<string, Estadistica[]>;
+  partidos: any[];
 }
 
 interface Props {
@@ -135,112 +132,119 @@ const EquipoTagSelector: React.FC<{
   );
 };
 
-const ClasificacionTable: React.FC<{
-  rivales: DivisionEquipo[];
-  standingsMap: Record<number, Standing>;
-  plantillasMap: Record<number, PlantillaInfo>;
-}> = ({ rivales, standingsMap, plantillasMap }) => {
-  const rows = [...rivales]
-    .map(dr => ({ equipo: dr.equipo, s: standingsMap[dr.equipo.id] ?? { pj:0,pg:0,pe:0,pp:0,gf:0,gc:0,dif:0,pts:0 } }))
-    .sort((a, b) => b.s.pts - a.s.pts || b.s.dif - a.s.dif || b.s.gf - a.s.gf);
-
-  return (
-    <Table className="text-xs w-full">
-      <TableHeader>
-        <TableRow>
-          <TableHead className="p-1">#</TableHead>
-          <TableHead className="p-1">Equipo</TableHead>
-          <TableHead className="p-1 text-center">PJ</TableHead>
-          <TableHead className="p-1 text-center">PG</TableHead>
-          <TableHead className="p-1 text-center">PE</TableHead>
-          <TableHead className="p-1 text-center">PP</TableHead>
-          <TableHead className="p-1 text-center">GF</TableHead>
-          <TableHead className="p-1 text-center">GC</TableHead>
-          <TableHead className="p-1 text-center">DIF</TableHead>
-          <TableHead className="p-1 text-center font-bold">PTS</TableHead>
+const TopEquiposTable: React.FC<{ data: Estadistica[]; field: keyof Estadistica; label: string; colorClass: string }> = ({ data, field, label, colorClass }) => (
+  <Table className="text-xs">
+    <TableHeader><TableRow><TableHead className="w-8">#</TableHead><TableHead>Equipo</TableHead><TableHead className="text-center">{label}</TableHead></TableRow></TableHeader>
+    <TableBody>
+      {data?.map((stat: Estadistica, idx: number) => (
+        <TableRow key={stat.equipo.id}>
+          <TableCell className="font-bold">{idx + 1}</TableCell>
+          <TableCell>{stat.equipo.nombre}</TableCell>
+          <TableCell className={`text-center font-bold ${colorClass}`}>{String(stat[field] ?? 0)}</TableCell>
         </TableRow>
-      </TableHeader>
-      <TableBody>
-        {rows.map(({ equipo, s }, i) => {
-          const info = plantillasMap[equipo.id];
-          return (
-            <TableRow key={equipo.id}>
-              <TableCell className="p-1 text-center text-gray-400">{i + 1}</TableCell>
-              <TableCell className="p-1">
-                <span className={info ? "" : "text-orange-400"}>{equipo.nombre}</span>
-                {info && (
-                  <span className="ml-1 text-gray-500">
-                    ({info.media_alineacion ?? "—"}/{info.media_plantilla ?? "—"})
-                  </span>
-                )}
-              </TableCell>
-              <TableCell className="p-1 text-center">{s.pj}</TableCell>
-              <TableCell className="p-1 text-center text-green-400">{s.pg}</TableCell>
-              <TableCell className="p-1 text-center text-gray-400">{s.pe}</TableCell>
-              <TableCell className="p-1 text-center text-red-400">{s.pp}</TableCell>
-              <TableCell className="p-1 text-center">{s.gf}</TableCell>
-              <TableCell className="p-1 text-center">{s.gc}</TableCell>
-              <TableCell className={`p-1 text-center ${s.dif > 0 ? "text-green-400" : s.dif < 0 ? "text-red-400" : ""}`}>
-                {s.dif > 0 ? `+${s.dif}` : s.dif}
-              </TableCell>
-              <TableCell className="p-1 text-center font-bold">{s.pts}</TableCell>
-            </TableRow>
-          );
-        })}
-      </TableBody>
-    </Table>
-  );
-};
+      ))}
+    </TableBody>
+  </Table>
+);
 
-const JugadoresTable: React.FC<{
-  rivales: DivisionEquipo[];
-  jugadoresStats: Record<number, Jugador[]>;
-}> = ({ rivales, jugadoresStats }) => {
-  const jugadores: (Jugador & { equipo: string })[] = [];
-
-  rivales.forEach(dr => {
-    const stats = jugadoresStats[dr.equipo.id] || [];
-    stats.forEach(j => {
-      jugadores.push({ ...j, equipo: dr.equipo.nombre });
-    });
-  });
-
-  jugadores.sort((a, b) => b.media - a.media);
-
-  return (
-    <Table className="text-xs w-full">
-      <TableHeader>
-        <TableRow>
-          <TableHead className="p-1">Equipo</TableHead>
-          <TableHead className="p-1">Jugador</TableHead>
-          <TableHead className="p-1 text-center">Media</TableHead>
-          <TableHead className="p-1 text-center">Posición</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {jugadores.map((j, i) => (
-          <TableRow key={`${j.equipo}-${j.id}`} className={j.es_titular ? "" : "opacity-60"}>
-            <TableCell className="p-1 text-xs font-medium">{j.equipo}</TableCell>
-            <TableCell className="p-1">
-              {j.nombre}
-              {j.es_titular && <span className="ml-1 text-xs bg-green-600/30 px-1 rounded">T</span>}
-            </TableCell>
-            <TableCell className="p-1 text-center font-bold">{j.media}</TableCell>
-            <TableCell className="p-1 text-center text-gray-500">{j.es_titular ? "Titular" : "Suplente"}</TableCell>
+const ClasificacionTab: React.FC<{ estadisticas: Estadistica[] }> = ({ estadisticas }) => (
+  <Card>
+    <CardHeader><CardTitle>Tabla de Clasificación</CardTitle></CardHeader>
+    <CardContent>
+      <Table className="text-xs">
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-10">#</TableHead>
+            <TableHead>Equipo</TableHead>
+            <TableHead className="text-center">PJ</TableHead>
+            <TableHead className="text-center">V</TableHead>
+            <TableHead className="text-center">E</TableHead>
+            <TableHead className="text-center">D</TableHead>
+            <TableHead className="text-center">GF</TableHead>
+            <TableHead className="text-center">GC</TableHead>
+            <TableHead className="text-center">DG</TableHead>
+            <TableHead className="text-center font-bold">PTS</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-  );
-};
+        </TableHeader>
+        <TableBody>
+          {estadisticas.map((stat, index) => (
+            <TableRow key={stat.equipo.id} className={index === 0 ? 'bg-green-500/10' : ''}>
+              <TableCell className="font-bold">
+                {index === 0 && <Trophy className="h-4 w-4 inline text-yellow-500 mr-1" />}
+                {index + 1}
+              </TableCell>
+              <TableCell className="font-medium">{stat.equipo.nombre}</TableCell>
+              <TableCell className="text-center">{stat.partidos_jugados}</TableCell>
+              <TableCell className="text-center text-green-600">{stat.victorias}</TableCell>
+              <TableCell className="text-center text-yellow-600">{stat.empates}</TableCell>
+              <TableCell className="text-center text-red-600">{stat.derrotas}</TableCell>
+              <TableCell className="text-center">{stat.goles_favor}</TableCell>
+              <TableCell className="text-center">{stat.goles_contra}</TableCell>
+              <TableCell className={`text-center font-medium ${stat.diferencia_goles > 0 ? 'text-green-600' : stat.diferencia_goles < 0 ? 'text-red-600' : ''}`}>
+                {stat.diferencia_goles > 0 ? '+' : ''}{stat.diferencia_goles}
+              </TableCell>
+              <TableCell className="text-center font-bold text-lg">{stat.puntos}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </CardContent>
+  </Card>
+);
 
-const DivisionCard: React.FC<{
+const EstadisticasEquiposTab: React.FC<{ stats: Record<string, Estadistica[]> }> = ({ stats }) => (
+  <div className="space-y-8">
+    <div>
+      <h3 className="text-xl font-semibold mb-4 text-green-700">⚡ ATAQUE</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <Card><CardHeader><CardTitle className="text-sm flex items-center gap-2"><TrendingUp className="h-4 w-4 text-green-600" />Top 5 Goles</CardTitle></CardHeader><CardContent><TopEquiposTable data={stats.goles_favor || []} field="goles_favor" label="GF" colorClass="text-green-600" /></CardContent></Card>
+        <Card><CardHeader><CardTitle className="text-sm">🎯 Tiros</CardTitle></CardHeader><CardContent><TopEquiposTable data={stats.tiros_realizados || []} field="tiros_realizados" label="TR" colorClass="text-blue-600" /></CardContent></Card>
+        <Card><CardHeader><CardTitle className="text-sm">🪵 Tiros al Palo</CardTitle></CardHeader><CardContent><TopEquiposTable data={stats.tiros_al_palo || []} field="tiros_al_palo" label="Palo" colorClass="text-amber-700" /></CardContent></Card>
+      </div>
+    </div>
+
+    <div>
+      <h3 className="text-xl font-semibold mb-4 text-blue-700">🛡️ DEFENSA</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <Card><CardHeader><CardTitle className="text-sm">🟩 Balones Ganados</CardTitle></CardHeader><CardContent><TopEquiposTable data={stats.balones_ganados_equipo || []} field="balones_ganados_equipo" label="BG" colorClass="text-green-700" /></CardContent></Card>
+        <Card><CardHeader><CardTitle className="text-sm text-red-600">Menos Goles en Contra</CardTitle></CardHeader><CardContent><TopEquiposTable data={stats.goles_contra || []} field="goles_contra" label="GC" colorClass="text-red-600" /></CardContent></Card>
+        <Card><CardHeader><CardTitle className="text-sm">🛑 Intercepciones</CardTitle></CardHeader><CardContent><TopEquiposTable data={stats.interceciones_equipo || []} field="interceciones_equipo" label="INT" colorClass="text-blue-700" /></CardContent></Card>
+      </div>
+    </div>
+
+    <div>
+      <h3 className="text-xl font-semibold mb-4 text-purple-700">💪 FÍSICO</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <Card><CardHeader><CardTitle className="text-sm">⏱️ Distancia</CardTitle></CardHeader><CardContent><TopEquiposTable data={stats.distancia_recorrida || []} field="distancia_recorrida" label="Kms" colorClass="text-green-600" /></CardContent></Card>
+        <Card><CardHeader><CardTitle className="text-sm">📊 Pases</CardTitle></CardHeader><CardContent><TopEquiposTable data={stats.pases || []} field="pases" label="Pases" colorClass="text-purple-600" /></CardContent></Card>
+        <Card><CardHeader><CardTitle className="text-sm">⭐ Posesión</CardTitle></CardHeader><CardContent><TopEquiposTable data={stats.posesion || []} field="posesion_promedio" label="%" colorClass="text-blue-600" /></CardContent></Card>
+      </div>
+    </div>
+
+    <div>
+      <h3 className="text-xl font-semibold mb-4 text-yellow-700">🟨 TARJETAS</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card><CardHeader><CardTitle className="text-sm">⚠️ Amarillas</CardTitle></CardHeader><CardContent><TopEquiposTable data={stats.tarjetas_amarillas || []} field="tarjetas_amarillas" label="TA" colorClass="text-yellow-600" /></CardContent></Card>
+        <Card><CardHeader><CardTitle className="text-sm">🟥 Rojas</CardTitle></CardHeader><CardContent><TopEquiposTable data={stats.tarjetas_rojas || []} field="tarjetas_rojas" label="TR" colorClass="text-red-600" /></CardContent></Card>
+      </div>
+    </div>
+
+    <div>
+      <h3 className="text-xl font-semibold mb-4 text-green-700">⚽ PENALTIES</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card><CardHeader><CardTitle className="text-sm">✅ A Favor</CardTitle></CardHeader><CardContent><TopEquiposTable data={stats.penalties_equipo || []} field="penalties_equipo" label="Pen" colorClass="text-green-600" /></CardContent></Card>
+        <Card><CardHeader><CardTitle className="text-sm">🚫 En Contra</CardTitle></CardHeader><CardContent><TopEquiposTable data={stats.penalties_rival || []} field="penalties_rival" label="Pen" colorClass="text-red-600" /></CardContent></Card>
+      </div>
+    </div>
+  </div>
+);
+
+const OrdenJuegoTab: React.FC<{
   division: Division;
   squadBattleId: number;
   equipos: Equipo[];
   plantillasMap: Record<number, PlantillaInfo>;
-  divisionData: DivisionData;
-}> = ({ division, squadBattleId, equipos, plantillasMap, divisionData }) => {
+}> = ({ division, squadBattleId, equipos, plantillasMap }) => {
   const [pendientes, setPendientes] = useState<Equipo[]>([]);
   const total = division.rivales.length;
   const sorted = [...division.rivales].sort((a, b) => a.orden - b.orden);
@@ -266,148 +270,112 @@ const DivisionCard: React.FC<{
     router.patch(`/squad-battles/${squadBattleId}/divisiones/${division.id}/orden`, { orden });
   };
 
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex justify-between items-center mb-2">
+        <p className="text-sm font-semibold text-muted-foreground">{total}/18 equipos</p>
+        {total > 1 && <Button size="sm" variant="outline" onClick={aleatorizar}>🔀 Aleatorizar</Button>}
+      </div>
+
+      <Table className="text-sm">
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-10 text-center">#</TableHead>
+            <TableHead>Equipo</TableHead>
+            <TableHead className="w-8"></TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {sorted.map(dr => {
+            const info = plantillasMap[dr.equipo.id];
+            return (
+              <TableRow key={dr.id}>
+                <TableCell className="text-center font-bold">{dr.orden}</TableCell>
+                <TableCell>
+                  <span className={info ? "" : "text-orange-400"}>{dr.equipo.nombre}</span>
+                  {info && <span className="ml-1 text-xs text-gray-500">({info.media_alineacion ?? "—"}/{info.media_plantilla ?? "—"})</span>}
+                </TableCell>
+                <TableCell className="text-center">
+                  <button onClick={() => removeEquipo(dr.id)} className="text-red-400 hover:text-red-600">×</button>
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+
+      {total < 18 && (
+        <div className="flex flex-col gap-2 border-t pt-3 mt-2">
+          <EquipoTagSelector
+            disponibles={disponibles}
+            selected={pendientes}
+            onAdd={eq => total + pendientes.length < 18 && setPendientes(p => [...p, eq])}
+            onRemove={id => setPendientes(p => p.filter(e => e.id !== id))}
+          />
+          {pendientes.length > 0 && (
+            <Button size="sm" onClick={confirmarAdd} className="bg-blue-600 hover:bg-blue-700 text-white self-start">
+              Añadir {pendientes.length}
+            </Button>
+          )}
+        </div>
+      )}
+      {total >= 18 && <p className="text-xs text-gray-500 text-center">División completa (18/18)</p>}
+    </div>
+  );
+};
+
+const DivisionContent: React.FC<{
+  division: Division;
+  squadBattleId: number;
+  equipos: Equipo[];
+  plantillasMap: Record<number, PlantillaInfo>;
+  divisionData: DivisionData;
+}> = ({ division, squadBattleId, equipos, plantillasMap, divisionData }) => {
   const deleteDiv = () => {
     if (confirm(`¿Eliminar la división "${division.nombre}"?`))
       router.delete(`/squad-battles/${squadBattleId}/divisiones/${division.id}`);
   };
 
+  const totalEquipos = division.rivales.length;
+  const totalPartidos = divisionData.estadisticas.reduce((s, e) => s + e.partidos_jugados, 0);
+  const totalGoles = divisionData.estadisticas.reduce((s, e) => s + e.goles_favor, 0);
+
   return (
-    <div className="border rounded-lg p-4 flex flex-col gap-4">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <h2 className="text-lg font-bold">
-          {division.nombre}
-          <span className="ml-3 text-sm font-normal text-gray-400">{total}/18</span>
-        </h2>
-        <div className="flex gap-2">
-          {total > 1 && (
-            <Button size="sm" variant="outline" onClick={aleatorizar}>🔀 Aleatorizar</Button>
-          )}
-          <Button size="sm" variant="destructive" onClick={deleteDiv}>Eliminar</Button>
-        </div>
+    <div className="flex flex-col gap-4">
+      {/* Resumen */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <Card><CardHeader className="pb-2"><CardTitle className="text-xs font-medium text-muted-foreground">Equipos</CardTitle></CardHeader><CardContent><div className="flex items-center gap-2"><Users className="h-4 w-4 text-blue-500" /><span className="text-xl font-bold">{totalEquipos}</span></div></CardContent></Card>
+        <Card><CardHeader className="pb-2"><CardTitle className="text-xs font-medium text-muted-foreground">Partidos</CardTitle></CardHeader><CardContent><div className="text-xl font-bold">{totalPartidos}</div></CardContent></Card>
+        <Card><CardHeader className="pb-2"><CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1"><TrendingUp className="h-3 w-3 text-green-500" />Goles</CardTitle></CardHeader><CardContent><div className="text-xl font-bold text-green-600">{totalGoles}</div></CardContent></Card>
+        <Card><CardHeader className="pb-2"><CardTitle className="text-xs font-medium text-muted-foreground">Goles/Partido</CardTitle></CardHeader><CardContent><div className="text-xl font-bold">{(totalGoles / Math.max(totalPartidos, 1)).toFixed(2)}</div></CardContent></Card>
       </div>
 
-      {/* Tabs: Orden de juego, Clasificación, Estadísticas individuales */}
-      {total > 0 ? (
-        <Tabs defaultValue="clasificacion" className="w-full">
-          <TabsList>
-            <TabsTrigger value="orden">Orden de juego</TabsTrigger>
-            <TabsTrigger value="clasificacion">Clasificación</TabsTrigger>
-            <TabsTrigger value="jugadores">Jugadores</TabsTrigger>
-          </TabsList>
+      {/* Tabs */}
+      <Tabs defaultValue="orden">
+        <TabsList>
+          <TabsTrigger value="orden">Orden de Juego</TabsTrigger>
+          <TabsTrigger value="clasificacion">Clasificación</TabsTrigger>
+          <TabsTrigger value="equipos">Estadísticas Equipos</TabsTrigger>
+        </TabsList>
 
-          <TabsContent value="orden" className="mt-4">
-            <div className="flex flex-col gap-2">
-              <Table className="text-sm w-full">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="p-1 w-10 text-center">#</TableHead>
-                    <TableHead className="p-1">Equipo</TableHead>
-                    <TableHead className="p-1 w-8"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {sorted.map(dr => {
-                    const info = plantillasMap[dr.equipo.id];
-                    return (
-                      <TableRow key={dr.id}>
-                        <TableCell className="p-1 text-center font-mono font-bold">{dr.orden}</TableCell>
-                        <TableCell className="p-1">
-                          <span className={info ? "" : "text-orange-400"}>{dr.equipo.nombre}</span>
-                          {info && (
-                            <span className="ml-1 text-xs text-gray-500">
-                              ({info.media_alineacion ?? "—"}/{info.media_plantilla ?? "—"})
-                            </span>
-                          )}
-                        </TableCell>
-                        <TableCell className="p-1 text-center">
-                          <button onClick={() => removeEquipo(dr.id)} className="text-red-400 hover:text-red-600">×</button>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
+        <TabsContent value="orden" className="mt-4">
+          <OrdenJuegoTab division={division} squadBattleId={squadBattleId} equipos={equipos} plantillasMap={plantillasMap} />
+        </TabsContent>
 
-              {total < 18 && (
-                <div className="flex flex-col gap-2 border-t pt-3 mt-2">
-                  <EquipoTagSelector
-                    disponibles={disponibles}
-                    selected={pendientes}
-                    onAdd={eq => total + pendientes.length < 18 && setPendientes(p => [...p, eq])}
-                    onRemove={id => setPendientes(p => p.filter(e => e.id !== id))}
-                  />
-                  {pendientes.length > 0 && (
-                    <Button size="sm" onClick={confirmarAdd} className="bg-blue-600 hover:bg-blue-700 text-white self-start">
-                      Añadir {pendientes.length} equipo{pendientes.length > 1 ? "s" : ""}
-                    </Button>
-                  )}
-                </div>
-              )}
-              {total >= 18 && <p className="text-xs text-gray-500 text-center">División completa (18/18)</p>}
-            </div>
-          </TabsContent>
+        <TabsContent value="clasificacion" className="mt-4">
+          <ClasificacionTab estadisticas={divisionData.estadisticas} />
+        </TabsContent>
 
-          <TabsContent value="clasificacion" className="mt-4">
-            <ClasificacionTable
-              rivales={division.rivales}
-              standingsMap={divisionData.standingsMap}
-              plantillasMap={plantillasMap}
-            />
-          </TabsContent>
+        <TabsContent value="equipos" className="mt-4">
+          <EstadisticasEquiposTab stats={divisionData.estadisticas_equipos} />
+        </TabsContent>
+      </Tabs>
 
-          <TabsContent value="jugadores" className="mt-4">
-            <JugadoresTable
-              rivales={division.rivales}
-              jugadoresStats={divisionData.jugadoresStats}
-            />
-          </TabsContent>
-        </Tabs>
-      ) : (
-        <>
-          <p className="text-gray-500 text-sm text-center py-3">Sin equipos todavía</p>
-          <div className="flex flex-col gap-2">
-            <EquipoTagSelector
-              disponibles={disponibles}
-              selected={pendientes}
-              onAdd={eq => total + pendientes.length < 18 && setPendientes(p => [...p, eq])}
-              onRemove={id => setPendientes(p => p.filter(e => e.id !== id))}
-            />
-            {pendientes.length > 0 && (
-              <Button size="sm" onClick={confirmarAdd} className="bg-blue-600 hover:bg-blue-700 text-white self-start">
-                Añadir {pendientes.length} equipo{pendientes.length > 1 ? "s" : ""}
-              </Button>
-            )}
-          </div>
-        </>
-      )}
+      {/* Botón eliminar división */}
+      <div className="flex justify-end">
+        <Button size="sm" variant="destructive" onClick={deleteDiv}>Eliminar División</Button>
+      </div>
     </div>
-  );
-};
-
-const AddDivisionForm: React.FC<{ squadBattleId: number; nextOrden: number }> = ({ squadBattleId, nextOrden }) => {
-  const [nombre, setNombre] = useState("");
-  const [open, setOpen] = useState(false);
-
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    router.post(
-      `/squad-battles/${squadBattleId}/divisiones`,
-      { nombre, orden: nextOrden },
-      { onSuccess: () => { setNombre(""); setOpen(false); } }
-    );
-  };
-
-  if (!open)
-    return <Button onClick={() => setOpen(true)} variant="outline" className="self-start">+ Añadir División</Button>;
-
-  return (
-    <form onSubmit={submit} className="flex gap-2 items-end border rounded p-3 self-start">
-      <Input value={nombre} onChange={e => setNombre(e.target.value)}
-        placeholder="Ej: División 1" className="w-40" required autoFocus />
-      <Button type="submit" className="bg-green-600 hover:bg-green-700 text-white">Crear</Button>
-      <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-    </form>
   );
 };
 
@@ -418,7 +386,10 @@ const Show: React.FC<Props> = ({ squadBattle, equipos, plantillasMap, divisiones
       <div className="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-2xl font-bold">{squadBattle.nombre}</h1>
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+              <Trophy className="h-6 w-6 text-yellow-500" />
+              {squadBattle.nombre}
+            </h1>
             {squadBattle.temporada && (
               <p className="text-gray-400 text-sm mt-1">Temporada: {squadBattle.temporada.nombre}</p>
             )}
@@ -433,9 +404,9 @@ const Show: React.FC<Props> = ({ squadBattle, equipos, plantillasMap, divisiones
           <p className="text-gray-500 text-center py-12">No hay divisiones. Añade una para empezar.</p>
         ) : (
           <Tabs defaultValue={String(squadBattle.divisiones[0]?.id)} className="w-full">
-            <TabsList className="flex w-full">
+            <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${Math.min(squadBattle.divisiones.length, 6)}, minmax(0, 1fr))` }}>
               {squadBattle.divisiones.map(div => (
-                <TabsTrigger key={div.id} value={String(div.id)}>
+                <TabsTrigger key={div.id} value={String(div.id)} className="text-xs md:text-sm">
                   {div.nombre}
                 </TabsTrigger>
               ))}
@@ -443,19 +414,36 @@ const Show: React.FC<Props> = ({ squadBattle, equipos, plantillasMap, divisiones
 
             {squadBattle.divisiones.map(div => (
               <TabsContent key={div.id} value={String(div.id)} className="mt-4">
-                <DivisionCard
+                <DivisionContent
                   division={div}
                   squadBattleId={squadBattle.id}
                   equipos={equipos}
                   plantillasMap={plantillasMap}
-                  divisionData={divisionesData[div.id] || { standingsMap: {}, jugadoresStats: {} }}
+                  divisionData={divisionesData[div.id] || { estadisticas: [], estadisticas_equipos: {}, partidos: [] }}
                 />
               </TabsContent>
             ))}
           </Tabs>
         )}
 
-        <AddDivisionForm squadBattleId={squadBattle.id} nextOrden={squadBattle.divisiones.length + 1} />
+        {/* Botón añadir división */}
+        <div className="flex justify-start">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const nombre = prompt("Nombre de la división:");
+              if (nombre) {
+                router.post(`/squad-battles/${squadBattle.id}/divisiones`, {
+                  nombre,
+                  orden: squadBattle.divisiones.length + 1,
+                });
+              }
+            }}
+          >
+            + Añadir División
+          </Button>
+        </div>
       </div>
     </AppLayout>
   );

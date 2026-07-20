@@ -40,14 +40,12 @@ class SquadBattleController extends Controller
     {
         $squadBattle->load(['divisiones.rivales.equipo', 'temporada']);
 
-        // Recoger todos los equipo_ids presentes en las divisiones
         $equipoIds = $squadBattle->divisiones
             ->flatMap(fn($d) => $d->rivales->pluck('equipo_id'))
             ->unique()
             ->values();
 
-        // Cargar plantillas de esos equipos filtradas por temporada
-        $plantillasQuery = Plantilla::with(['jugadores' => fn($q) => $q->select('jugadors.id', 'media')])
+        $plantillasQuery = Plantilla::with(['equipo', 'jugadores' => fn($q) => $q->select('jugadors.id', 'nombre', 'media')])
             ->whereIn('equipo_id', $equipoIds)
             ->orderByDesc('id');
 
@@ -55,17 +53,16 @@ class SquadBattleController extends Controller
             $plantillasQuery->where('temporada_id', $squadBattle->temporada_id);
         }
 
-        // Agrupar por equipo y quedarse con la plantilla que tenga más jugadores
         $plantillasMap = $plantillasQuery->get()
             ->groupBy('equipo_id')
             ->map(function ($grupo) {
                 $p = $grupo->sortByDesc(fn($p) => $p->jugadores->count())->first();
-
                 $jugadores = $p->jugadores;
                 $titulares = $jugadores->filter(fn($j) => $j->pivot->es_titular);
 
                 return [
                     'id'               => $p->id,
+                    'equipo'           => ['id' => $p->equipo->id, 'nombre' => $p->equipo->nombre],
                     'media_plantilla'  => $jugadores->count() ? round($jugadores->avg('media'), 1) : null,
                     'media_alineacion' => $titulares->count() ? round($titulares->avg('media'), 1) : null,
                     'jugadores'        => $jugadores->map(fn($j) => [
@@ -77,10 +74,10 @@ class SquadBattleController extends Controller
                 ];
             });
 
-        // Calcular clasificación a partir de partidos jugados
         $partidosQuery = \App\Models\Partido::query()
             ->whereNotNull('goles_equipo')
             ->whereNotNull('goles_rival')
+            ->with(['equipo', 'visitanteEquipo'])
             ->where(function ($q) use ($equipoIds) {
                 $q->whereIn('equipo_id', $equipoIds)
                   ->orWhereIn('visitante_id', $equipoIds);
@@ -90,49 +87,114 @@ class SquadBattleController extends Controller
             $partidosQuery->where('temporada_id', $squadBattle->temporada_id);
         }
 
-        $partidos = $partidosQuery->get();
+        $partidos = $partidosQuery->orderBy('jornada', 'asc')->get();
 
-        // Estadísticas por división
         $divisionesData = [];
         foreach ($squadBattle->divisiones as $division) {
             $divisionEquipoIds = $division->rivales->pluck('equipo_id')->toArray();
 
-            $standingsMap = [];
-            $jugadoresStats = [];
-
+            $estadisticas = [];
             foreach ($divisionEquipoIds as $eqId) {
-                $s = ['pj' => 0, 'pg' => 0, 'pe' => 0, 'pp' => 0, 'gf' => 0, 'gc' => 0, 'dif' => 0, 'pts' => 0];
+                $equipoPlantilla = $plantillasMap[$eqId] ?? null;
+                $equipo = Equipo::find($eqId);
 
+                $stats = [
+                    'equipo' => ['id' => $equipo->id, 'nombre' => $equipo->nombre, 'codigo' => $equipo->codigo, 'escudo' => $equipo->escudo],
+                    'partidos_jugados' => 0,
+                    'victorias' => 0,
+                    'empates' => 0,
+                    'derrotas' => 0,
+                    'goles_favor' => 0,
+                    'goles_contra' => 0,
+                    'diferencia_goles' => 0,
+                    'puntos' => 0,
+                    'tarjetas_amarillas' => 0,
+                    'tarjetas_rojas' => 0,
+                    'posesion_promedio' => 0,
+                    'tiros_al_palo' => 0,
+                    'tiros_realizados' => 0,
+                    'tiros_recibidos' => 0,
+                    'pases' => 0,
+                    'distancia_recorrida' => 0,
+                    'balones_ganados_equipo' => 0,
+                    'interceciones_equipo' => 0,
+                    'penalties_equipo' => 0,
+                    'penalties_rival' => 0,
+                ];
+
+                $totalPosesion = 0;
                 foreach ($partidos as $p) {
                     $esLocal     = !$p->local_es_rival     && $p->equipo_id    == $eqId;
                     $esVisitante = !$p->visitante_es_rival && $p->visitante_id == $eqId;
 
-                    if ($esLocal) {
-                        $s['pj']++; $s['gf'] += $p->goles_equipo; $s['gc'] += $p->goles_rival;
-                        if ($p->goles_equipo > $p->goles_rival)      $s['pg']++;
-                        elseif ($p->goles_equipo == $p->goles_rival) $s['pe']++;
-                        else                                          $s['pp']++;
-                    } elseif ($esVisitante) {
-                        $s['pj']++; $s['gf'] += $p->goles_rival; $s['gc'] += $p->goles_equipo;
-                        if ($p->goles_rival > $p->goles_equipo)      $s['pg']++;
-                        elseif ($p->goles_rival == $p->goles_equipo) $s['pe']++;
-                        else                                          $s['pp']++;
+                    if ($esLocal || $esVisitante) {
+                        $stats['partidos_jugados']++;
+
+                        $golesFavor = $esLocal ? $p->goles_equipo : $p->goles_rival;
+                        $golesContra = $esLocal ? $p->goles_rival : $p->goles_equipo;
+
+                        $stats['goles_favor'] += $golesFavor;
+                        $stats['goles_contra'] += $golesContra;
+                        $stats['tarjetas_amarillas'] += $esLocal ? ($p->tarjetas_amarillas_equipo ?? 0) : ($p->tarjetas_amarillas_rival ?? 0);
+                        $stats['tarjetas_rojas'] += $esLocal ? ($p->tarjetas_rojas_equipo ?? 0) : ($p->tarjetas_rojas_rival ?? 0);
+                        $totalPosesion += $esLocal ? ($p->posesion_equipo ?? 0) : ($p->posesion_rival ?? 0);
+                        $stats['pases'] += $esLocal ? ($p->pases_equipo ?? 0) : ($p->pases_rival ?? 0);
+                        $stats['distancia_recorrida'] += $esLocal ? ($p->distancia_equipo ?? 0) : ($p->distancia_rival ?? 0);
+                        $stats['tiros_realizados'] += $esLocal ? ($p->tiros_equipo ?? 0) : ($p->tiros_rival ?? 0);
+                        $stats['tiros_recibidos'] += $esLocal ? ($p->tiros_rival ?? 0) : ($p->tiros_equipo ?? 0);
+                        $stats['tiros_al_palo'] += $esLocal ? ($p->tiros_al_palo_equipo ?? 0) : ($p->tiros_al_palo_rival ?? 0);
+                        $stats['balones_ganados_equipo'] += $esLocal ? ($p->balones_ganados_equipo ?? 0) : ($p->balones_ganados_rival ?? 0);
+                        $stats['interceciones_equipo'] += $esLocal ? ($p->interceciones_equipo ?? 0) : ($p->intercepciones_rival ?? 0);
+                        $stats['penalties_equipo'] += $esLocal ? ($p->penalties_equipo ?? 0) : ($p->penalties_rival ?? 0);
+                        $stats['penalties_rival'] += $esLocal ? ($p->penalties_rival ?? 0) : ($p->penalties_equipo ?? 0);
+
+                        if ($golesFavor > $golesContra) {
+                            $stats['victorias']++;
+                            $stats['puntos'] += 3;
+                        } elseif ($golesFavor == $golesContra) {
+                            $stats['empates']++;
+                            $stats['puntos'] += 1;
+                        } else {
+                            $stats['derrotas']++;
+                        }
                     }
                 }
 
-                $s['dif'] = $s['gf'] - $s['gc'];
-                $s['pts'] = $s['pg'] * 3 + $s['pe'];
-                $standingsMap[$eqId] = $s;
-
-                // Estadísticas individuales por equipo
-                if (isset($plantillasMap[$eqId])) {
-                    $jugadoresStats[$eqId] = $plantillasMap[$eqId]['jugadores'];
+                $stats['diferencia_goles'] = $stats['goles_favor'] - $stats['goles_contra'];
+                if ($stats['partidos_jugados'] > 0) {
+                    $stats['posesion_promedio'] = round($totalPosesion / $stats['partidos_jugados'], 1);
                 }
+
+                $estadisticas[] = $stats;
             }
 
+            usort($estadisticas, function ($a, $b) {
+                if ($a['puntos'] != $b['puntos']) return $b['puntos'] - $a['puntos'];
+                if ($a['diferencia_goles'] != $b['diferencia_goles']) return $b['diferencia_goles'] - $a['diferencia_goles'];
+                return $b['goles_favor'] - $a['goles_favor'];
+            });
+
+            // Top 5 estadísticas por categoría
+            $estadisticas_equipos = [
+                'goles_favor' => collect($estadisticas)->sortByDesc('goles_favor')->take(5)->values()->all(),
+                'goles_contra' => collect($estadisticas)->sortBy('goles_contra')->take(5)->values()->all(),
+                'tiros_realizados' => collect($estadisticas)->sortByDesc('tiros_realizados')->take(5)->values()->all(),
+                'tiros_al_palo' => collect($estadisticas)->sortByDesc('tiros_al_palo')->take(5)->values()->all(),
+                'tiros_recibidos' => collect($estadisticas)->sortByDesc('tiros_recibidos')->take(5)->values()->all(),
+                'pases' => collect($estadisticas)->sortByDesc('pases')->take(5)->values()->all(),
+                'distancia_recorrida' => collect($estadisticas)->sortByDesc('distancia_recorrida')->take(5)->values()->all(),
+                'posesion' => collect($estadisticas)->sortByDesc('posesion_promedio')->take(5)->values()->all(),
+                'balones_ganados_equipo' => collect($estadisticas)->sortByDesc('balones_ganados_equipo')->take(5)->values()->all(),
+                'interceciones_equipo' => collect($estadisticas)->sortByDesc('interceciones_equipo')->take(5)->values()->all(),
+                'tarjetas_amarillas' => collect($estadisticas)->sortByDesc('tarjetas_amarillas')->take(5)->values()->all(),
+                'tarjetas_rojas' => collect($estadisticas)->sortByDesc('tarjetas_rojas')->take(5)->values()->all(),
+                'penalties_equipo' => collect($estadisticas)->sortByDesc('penalties_equipo')->take(5)->values()->all(),
+            ];
+
             $divisionesData[$division->id] = [
-                'standingsMap' => $standingsMap,
-                'jugadoresStats' => $jugadoresStats,
+                'estadisticas' => $estadisticas,
+                'estadisticas_equipos' => $estadisticas_equipos,
+                'partidos' => $partidos->filter(fn($p) => in_array($p->equipo_id, $divisionEquipoIds) && in_array($p->visitante_id, $divisionEquipoIds)),
             ];
         }
 
