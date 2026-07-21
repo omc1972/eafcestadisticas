@@ -194,8 +194,12 @@ const Create: React.FC<Props> = ({ temporadas, competiciones }) => {
         rivalEquipoIdNum = visitante_equipo_id ? Number(visitante_equipo_id) : (visitanteEsRival ? null : (selectedRival ? Number(selectedRival) : null));
       }
 
-      const alineacionesInit = (plantillaEquipo || []).map((j: any) => buildRow(equipoIdNum, j.id));
-      const alineacionesRivalInit = (plantillaRival || []).map((j: any) => buildRow(rivalEquipoIdNum, j.id));
+      // Filtrar solo los 11 titulares inicialmente
+      const titularesEquipo = (plantillaEquipo || []).filter((j: any) => j.es_titular).slice(0, 11);
+      const titularesRival = (plantillaRival || []).filter((j: any) => j.es_titular).slice(0, 11);
+
+      const alineacionesInit = titularesEquipo.map((j: any) => buildRow(equipoIdNum, j.id));
+      const alineacionesRivalInit = titularesRival.map((j: any) => buildRow(rivalEquipoIdNum, j.id));
 
       setInitialAlineaciones(alineacionesInit);
       setInitialAlineacionesRival(alineacionesRivalInit);
