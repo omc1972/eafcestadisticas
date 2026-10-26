@@ -3,6 +3,7 @@ import { Head } from "@inertiajs/react";
 import AppLayout from "@/layouts/app-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
+import { Goal, CornerUpRight, ArrowUpCircle, ArrowDownCircle, Square, SquareX, TriangleAlert, Target, Hand, Flag } from "lucide-react";
 
 interface Jugador {
   id: number;
@@ -107,19 +108,20 @@ interface Props {
 }
 
 const View: React.FC<Props> = ({ partido, alineaciones_locales: alineacionesLocalesProp, alineaciones_visitantes: alineacionesVisitantesProp }) => {
-  // Función para obtener el icono del evento
+  // Función para obtener el icono del evento (monocromo, hereda el color del texto)
   const getEventoIcono = (tipoEvento: string) => {
     const tipo = tipoEvento.toLowerCase();
-    if (tipo.includes('gol')) return '⚽';
-    if (tipo.includes('asistencia')) return '🅰️';
-    if (tipo.includes('entra')) return '🔼';
-    if (tipo.includes('sale')) return '🔽';
-    if (tipo.includes('ta realizada')) return '🟨';
-    if (tipo.includes('tr realizada')) return '🟥';
-    if (tipo.includes('ta provocada')) return '⚠️';
-    if (tipo.includes('penalty provocado')) return '🎯';
-    if (tipo.includes('penalty parado')) return '🧤';
-    return '📌';
+    const className = "h-4 w-4 shrink-0";
+    if (tipo.includes('gol')) return <Goal className={className} />;
+    if (tipo.includes('asistencia')) return <CornerUpRight className={className} />;
+    if (tipo.includes('entra')) return <ArrowUpCircle className={className} />;
+    if (tipo.includes('sale')) return <ArrowDownCircle className={className} />;
+    if (tipo.includes('ta realizada')) return <Square className={className} />;
+    if (tipo.includes('tr realizada')) return <SquareX className={className} />;
+    if (tipo.includes('ta provocada')) return <TriangleAlert className={className} />;
+    if (tipo.includes('penalty provocado')) return <Target className={className} />;
+    if (tipo.includes('penalty parado')) return <Hand className={className} />;
+    return <Flag className={className} />;
   };
 
   // Determinar equipos y goles según partido_como_local
@@ -184,19 +186,17 @@ const View: React.FC<Props> = ({ partido, alineaciones_locales: alineacionesLoca
           <CardContent className="py-6">
             <div className="flex items-center justify-between mb-6">
               <div className="flex-1 text-center">
-                <h2 className="text-2xl font-bold">{equipoLocal.nombre}</h2>
-                <span className="text-sm text-muted-foreground">🏠 Local</span>
+                <h2 className="text-2xl font-bold">{equipoLocal?.nombre ?? 'Local'}</h2>
               </div>
               <div className="text-center px-8">
                 <div className="text-5xl font-bold flex items-center gap-4">
-                  <span className={golesLocal > golesVisitante ? 'text-green-600' : ''}>{golesLocal}</span>
+                  <span className={golesLocal > golesVisitante ? 'text-success' : ''}>{golesLocal}</span>
                   <span className="text-2xl text-muted-foreground">-</span>
-                  <span className={golesVisitante > golesLocal ? 'text-green-600' : ''}>{golesVisitante}</span>
+                  <span className={golesVisitante > golesLocal ? 'text-success' : ''}>{golesVisitante}</span>
                 </div>
               </div>
               <div className="flex-1 text-center">
-                <h2 className="text-2xl font-bold">{equipoVisitante.nombre}</h2>
-                <span className="text-sm text-muted-foreground">✈️ Visitante</span>
+                <h2 className="text-2xl font-bold">{equipoVisitante?.nombre ?? 'Visitante'}</h2>
               </div>
             </div>
             
@@ -241,9 +241,9 @@ const View: React.FC<Props> = ({ partido, alineaciones_locales: alineacionesLoca
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="font-bold">{equipoLocal.codigo} <span className="text-muted-foreground">({esLocal ? partido.valor_equipo ?? 0 : partido.valor_rival ?? 0})</span></span>
+                  <span className="font-bold">{equipoLocal?.codigo ?? '-'} <span className="text-muted-foreground">({esLocal ? partido.valor_equipo ?? 0 : partido.valor_rival ?? 0})</span></span>
                   <CardTitle className="text-base">Estadísticas</CardTitle>
-                  <span className="font-bold">{equipoVisitante.codigo} <span className="text-muted-foreground">({esLocal ? partido.valor_rival ?? 0 : partido.valor_equipo ?? 0})</span></span>
+                  <span className="font-bold">{equipoVisitante?.codigo ?? '-'} <span className="text-muted-foreground">({esLocal ? partido.valor_rival ?? 0 : partido.valor_equipo ?? 0})</span></span>
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -359,7 +359,7 @@ const View: React.FC<Props> = ({ partido, alineaciones_locales: alineacionesLoca
                           {esEventoLocal ? (
                             <div className="flex items-center gap-2 justify-end">
                               <span className="text-sm">{evento.jugador?.nombre ?? 'Desconocido'}</span>
-                              <span className="text-lg">{getEventoIcono(evento.tipo_evento.nombre)}</span>
+                              {getEventoIcono(evento.tipo_evento.nombre)}
                             </div>
                           ) : <div></div>}
                           
@@ -371,7 +371,7 @@ const View: React.FC<Props> = ({ partido, alineaciones_locales: alineacionesLoca
                           {/* Columna Derecha - Equipo Visitante */}
                           {!esEventoLocal ? (
                             <div className="flex items-center gap-2">
-                              <span className="text-lg">{getEventoIcono(evento.tipo_evento.nombre)}</span>
+                              {getEventoIcono(evento.tipo_evento.nombre)}
                               <span className="text-sm">{evento.jugador?.nombre ?? 'Desconocido'}</span>
                             </div>
                           ) : <div></div>}
@@ -396,7 +396,7 @@ const View: React.FC<Props> = ({ partido, alineaciones_locales: alineacionesLoca
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Alineación Local */}
               <div>
-                <h3 className="text-lg font-bold mb-4">🏠 Alineación Local - {equipoLocal.nombre}</h3>
+                <h3 className="text-lg font-bold mb-4">Alineación - {equipoLocal?.nombre ?? 'Local'}</h3>
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -421,11 +421,11 @@ const View: React.FC<Props> = ({ partido, alineaciones_locales: alineacionesLoca
                       const asistencias = jugadorId ? contarEventos("asistencia", jugadorId) : 0;
 
                       return (
-                        <TableRow key={a.id} className={a.jugador_del_partido ? "font-bold bg-yellow-50" : ""}>
+                        <TableRow key={a.id} className={a.jugador_del_partido ? "font-bold bg-warning/10" : ""}>
                           <TableCell>
                             {a.jugador_del_partido ? (
                               <>
-                                <span className="text-yellow-500 mr-1">⭐</span>
+                                <span className="text-warning mr-1">⭐</span>
                                 {a.jugador?.nombre ?? 'Desconocido'}
                               </>
                             ) : (
@@ -450,7 +450,7 @@ const View: React.FC<Props> = ({ partido, alineaciones_locales: alineacionesLoca
 
               {/* Alineación Visitante */}
               <div>
-                <h3 className="text-lg font-bold mb-4">✈️ Alineación Visitante - {equipoVisitante.nombre}</h3>
+                <h3 className="text-lg font-bold mb-4">Alineación - {equipoVisitante?.nombre ?? 'Visitante'}</h3>
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -475,11 +475,11 @@ const View: React.FC<Props> = ({ partido, alineaciones_locales: alineacionesLoca
                       const asistencias = jugadorId ? contarEventos("asistencia", jugadorId) : 0;
 
                       return (
-                        <TableRow key={a.id} className={a.jugador_del_partido ? "font-bold bg-blue-50" : ""}>
+                        <TableRow key={a.id} className={a.jugador_del_partido ? "font-bold bg-warning/10" : ""}>
                           <TableCell>
                             {a.jugador_del_partido ? (
                               <>
-                                <span className="text-yellow-500 mr-1">⭐</span>
+                                <span className="text-warning mr-1">⭐</span>
                                 {a.jugador?.nombre ?? 'Desconocido'}
                               </>
                             ) : (
