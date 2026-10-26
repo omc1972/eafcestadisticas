@@ -42,6 +42,7 @@ const Create: React.FC<Props> = ({ equipaciones, estadios, ligas }) => {
             type: "select",
             options: ligas.map(l => ({ label: l.nombre, value: l.id })),
         },
+        { name: "escudo", label: "Escudo", type: "file" },
     ];
 
     return (
@@ -62,6 +63,7 @@ const Create: React.FC<Props> = ({ equipaciones, estadios, ligas }) => {
                         equipacion_id: "",
                         estadio_id: "",
                         liga_id: "",
+                        escudo: null,
                     }}
                     onSuccess={() => console.log("Equipo creado con éxito")}
                 />

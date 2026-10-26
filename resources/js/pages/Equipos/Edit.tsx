@@ -15,6 +15,7 @@ interface Props {
         equipacion_id: number;
         estadio_id: number;
         liga_id: number | null;
+        escudo: string | null;
     };
     equipaciones: { id: number; nombre: string }[];
     estadios: { id: number; nombre: string }[];
@@ -52,6 +53,7 @@ const Edit: React.FC<Props> = ({ equipo, equipaciones, estadios, ligas }) => {
             type: "select",
             options: ligas.map(l => ({ label: l.nombre, value: l.id })),
         },
+        { name: "escudo", label: "Escudo", type: "file" },
     ];
 
     return (
@@ -72,6 +74,7 @@ const Edit: React.FC<Props> = ({ equipo, equipaciones, estadios, ligas }) => {
                         equipacion_id: equipo.equipacion_id.toString(),
                         estadio_id: equipo.estadio_id.toString(),
                         liga_id: equipo.liga_id ? equipo.liga_id.toString() : "",
+                        escudo: equipo.escudo ?? null,
                     }}
                     onSuccess={() => console.log("Equipo actualizado con éxito")}
                 />

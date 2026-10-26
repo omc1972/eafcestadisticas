@@ -8,6 +8,8 @@ use App\Models\Estadio;
 use App\Models\Liga;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 class EquipoController extends Controller
@@ -49,12 +51,34 @@ class EquipoController extends Controller
             'equipacion_id' => 'required|exists:equipacions,id',
             'estadio_id' => 'required|exists:estadios,id',
             'liga_id' => 'nullable|exists:ligas,id',
+            'escudo' => 'nullable|image|max:2048',
         ]);
+
+        unset($validated['escudo']);
+        if ($escudo = $this->storeEscudo($request, $validated['nombre'])) {
+            $validated['escudo'] = $escudo;
+        }
 
         Equipo::create($validated);
 
         return redirect()->route('equipos.index')->with('success', 'Equipo creado con éxito');
 
+    }
+
+    /**
+     * Guarda la imagen de escudo subida en storage/app/public/images y devuelve el nombre de fichero.
+     */
+    private function storeEscudo(Request $request, string $nombre): ?string
+    {
+        if (!$request->hasFile('escudo')) {
+            return null;
+        }
+
+        $file = $request->file('escudo');
+        $filename = Str::slug($nombre) . '.' . $file->getClientOriginalExtension();
+        $file->storeAs('images', $filename, 'public');
+
+        return $filename;
     }
 
     /**
@@ -231,7 +255,16 @@ class EquipoController extends Controller
             'equipacion_id' => 'required|exists:equipacions,id',
             'estadio_id' => 'required|exists:estadios,id',
             'liga_id' => 'nullable|exists:ligas,id',
+            'escudo' => 'nullable|image|max:2048',
         ]);
+
+        unset($validated['escudo']);
+        if ($escudo = $this->storeEscudo($request, $validated['nombre'])) {
+            if ($equipo->escudo && $equipo->escudo !== $escudo) {
+                Storage::disk('public')->delete('images/' . $equipo->escudo);
+            }
+            $validated['escudo'] = $escudo;
+        }
 
         $equipo->update($validated);
 
