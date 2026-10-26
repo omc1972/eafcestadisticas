@@ -25,11 +25,14 @@ interface Partido {
   visitante_id?: number | null;
   equipo: { id: number; nombre: string };
   rival?: { id: number; nombre: string } | null;
-  visitante: { id: number; nombre: string } | null;
-  visitanteEquipo?: { id: number; nombre: string } | null;
+  local_rival?: { id: number; nombre: string } | null;
+  visitante_rival?: { id: number; nombre: string } | null;
   visitante_equipo?: { id: number; nombre: string } | null;
+  visitante: { id: number; nombre: string } | null;
   goles_equipo: number;
   goles_rival: number;
+  valor_equipo?: number | null;
+  valor_rival?: number | null;
 }
 
 interface Props {
@@ -48,22 +51,23 @@ const Index: React.FC<Props> = ({ partidos }) => {
   const [globalFilter, setGlobalFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 10;
+
+  const getNombreRival = (row: Partido) =>
+    row.visitante_rival?.nombre ?? row.visitante_equipo?.nombre ?? row.rival?.nombre ?? 'Visitante';
+
   const filtered = partidos.filter(
     (p) =>
       p.equipo.nombre.toLowerCase().includes(globalFilter.toLowerCase()) ||
-      (p.visitante?.nombre ?? "").toLowerCase().includes(globalFilter.toLowerCase())
+      getNombreRival(p).toLowerCase().includes(globalFilter.toLowerCase())
   );
-     
+
   const paginated = filtered.slice(
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage
   );
-     
+
   const totalPages = Math.ceil(filtered.length / rowsPerPage);
   const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
-
-  const getVisitanteEquipoNombre = (row: Partido) =>
-    row.visitanteEquipo?.nombre ?? row.visitante_equipo?.nombre ?? 'Visitante';
 
   const renderLado = (nombre: string, esRival: boolean, rivalNombre?: string | null) => (
     <div className="flex flex-col leading-tight">
@@ -73,6 +77,33 @@ const Index: React.FC<Props> = ({ partidos }) => {
       ) : null}
     </div>
   );
+
+  // Dificultad = valor del equipo - valor del rival (el mismo dato que se ve en el detalle del partido).
+  // Positivo => favorable (equipo más fuerte), negativo => más difícil (rival más fuerte).
+  const MAX_DIFERENCIA = 20;
+  const renderDificultad = (valorEquipo?: number | null, valorRival?: number | null) => {
+    if (valorEquipo == null || valorRival == null) {
+      return <span className="text-xs text-muted-foreground">-</span>;
+    }
+    const diff = valorEquipo - valorRival;
+    const esFavorable = diff >= 0;
+    const anchoRelleno = (Math.min(Math.abs(diff), MAX_DIFERENCIA) / MAX_DIFERENCIA) * 50;
+
+    return (
+      <div className="flex items-center gap-2 w-36">
+        <div className="relative flex-1 h-1.5 rounded-full bg-muted">
+          <div className="absolute inset-y-0 left-1/2 w-px bg-border" />
+          <div
+            className={`absolute inset-y-0 ${esFavorable ? 'left-1/2 rounded-r-full bg-success' : 'right-1/2 rounded-l-full bg-destructive'}`}
+            style={{ width: `${anchoRelleno}%` }}
+          />
+        </div>
+        <span className={`text-xs font-mono w-10 text-right ${esFavorable ? 'text-success' : 'text-destructive'}`}>
+          {diff > 0 ? `+${diff}` : diff}
+        </span>
+      </div>
+    );
+  };
 
 
   return (
@@ -87,18 +118,19 @@ const Index: React.FC<Props> = ({ partidos }) => {
             onChange={(e) => setGlobalFilter(e.target.value)}
             className="max-w-md"
           />
-          <Button onClick={() => router.get("/partidos/create")} className="bg-blue-600 text-white hover:bg-blue-700">+</Button>
+          <Button onClick={() => router.get("/partidos/create")}>+</Button>
         </div>
     
         {paginated.length > 0 ? (
           <>
           <Table className="w-full">
             <TableHeader>
-              <TableRow className="bg-gray-200">
+              <TableRow>
                 <TableHead className="p-2 border">Local</TableHead>
                 <TableHead className="p-2 border">Goles Local</TableHead>
                 <TableHead className="p-2 border">Goles Visitante</TableHead>
                 <TableHead className="p-2 border">Visitante</TableHead>
+                <TableHead className="p-2 border">Dificultad</TableHead>
                 <TableHead className="p-2 border">Acciones</TableHead>
               </TableRow>
             </TableHeader>
@@ -108,7 +140,7 @@ const Index: React.FC<Props> = ({ partidos }) => {
                 <TableRow
                   key={row.id}
                   className={`cursor-pointer ${
-                    i % 2 === 0 ? "bg-gray-800" : "bg-gray-750"
+                    i % 2 === 0 ? "" : "bg-muted/30"
                   }`}
                   onClick={() => router.get(`/partidos/${row.id}/edit`)}
                 >
@@ -120,30 +152,36 @@ const Index: React.FC<Props> = ({ partidos }) => {
                     <TableCell className="p-2 border">{row.goles_equipo}</TableCell>
                     <TableCell className="p-2 border">{row.goles_rival}</TableCell>
                     <TableCell className="p-2 border">
-                      {renderLado(getVisitanteEquipoNombre(row), row.visitante_es_rival, row.rival?.nombre)}
+                      {renderLado(getNombreRival(row), row.visitante_es_rival, row.rival?.nombre)}
                     </TableCell>
-                    <TableCell> 
-                      <AccionesTabla 
-                        id={row.id} 
-                        basePath="/partidos" 
+                    <TableCell className="p-2 border">
+                      {renderDificultad(row.valor_equipo, row.valor_rival)}
+                    </TableCell>
+                    <TableCell className="p-2 border">
+                      <AccionesTabla
+                        id={row.id}
+                        basePath="/partidos"
                       />
                     </TableCell>
                   </>
-                  
+
                 ) : (
                   <>
                     <TableCell className="p-2 border">
-                      {renderLado(getVisitanteEquipoNombre(row), row.visitante_es_rival, row.rival?.nombre)}
+                      {renderLado(getNombreRival(row), row.visitante_es_rival, row.rival?.nombre)}
                     </TableCell>
                     <TableCell className="p-2 border">{row.goles_rival}</TableCell>
                     <TableCell className="p-2 border">{row.goles_equipo}</TableCell>
                     <TableCell className="p-2 border">
                       {renderLado(row.equipo.nombre, row.local_es_rival, row.rival?.nombre)}
                     </TableCell>
-                    <TableCell> 
-                      <AccionesTabla 
-                        id={row.id} 
-                        basePath="/partidos" 
+                    <TableCell className="p-2 border">
+                      {renderDificultad(row.valor_equipo, row.valor_rival)}
+                    </TableCell>
+                    <TableCell className="p-2 border">
+                      <AccionesTabla
+                        id={row.id}
+                        basePath="/partidos"
                       />
                     </TableCell>
                   </>
@@ -164,11 +202,11 @@ const Index: React.FC<Props> = ({ partidos }) => {
           </>          
             ) : (
               <div className="text-center py-8">
-                <i className="pi pi-inbox text-4xl text-gray-400 mb-2"></i>
-                <p className="text-gray-500 text-lg">
+                <i className="pi pi-inbox text-4xl text-muted-foreground mb-2"></i>
+                <p className="text-muted-foreground text-lg">
                   No se encontraron plantillas
                 </p>
-                <p className="text-gray-400 text-sm">
+                <p className="text-muted-foreground text-sm">
                   No hay plantillas registradas en el sistema
                 </p>
               </div>

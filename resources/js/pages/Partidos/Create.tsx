@@ -4,6 +4,7 @@ import AppLayout from "@/layouts/app-layout";
 import { dashboard } from "@/routes";
 import { type BreadcrumbItem } from "@/types";
 import DynamicForm from "@/components/forms/DynamicForm";
+import { CLEAR_OPTION_VALUE } from "@/components/forms/DynamicFieldArray";
 import axios from "axios";
 import {
   Select,
@@ -12,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 
@@ -52,7 +53,6 @@ const Create: React.FC<Props> = ({ temporadas, competiciones }) => {
   const [tiposEventos, setTiposEventos] = useState<{ id: number; nombre: string }[]>([]);
 
   const [isFifa, setIsFifa] = useState(false);
-  const [selectedRivalId, setSelectedRivalId] = useState<string | null>(null);
 
   const [jugadoresEquipo, setJugadoresEquipo] = useState<{ value: number; label: string }[]>([]);
   const [jugadoresRival, setJugadoresRival] = useState<{ value: number; label: string }[]>([]);
@@ -64,9 +64,11 @@ const Create: React.FC<Props> = ({ temporadas, competiciones }) => {
   const [selectedCampeonato, setSelectedCampeonato] = useState<string | null>(null);
   const [selectedDificultad, setSelectedDificultad] = useState<string | null>(null);
 
-  React.useEffect(() => {
-    console.log("[Create] step:", step, "isFifa:", isFifa, "selectedDificultad:", selectedDificultad);
-  }, [step, isFifa, selectedDificultad]);
+  // rival_id siempre apunta a la tabla `rivales`: se deriva de qué lado (local o visitante)
+  // está marcado como rival, sin necesidad de un selector aparte.
+  const derivedRivalId = visitanteEsRival
+    ? (selectedRival ? Number(selectedRival) : null)
+    : (localEsRival ? (selectedEquipo ? Number(selectedEquipo) : null) : null);
 
   const equiposOptions = equipos.map((e) => ({ value: e.id, label: e.nombre }));
   const rivalesOptions = rivales.map((r) => ({ value: r.id, label: r.nombre }));
@@ -107,7 +109,6 @@ const Create: React.FC<Props> = ({ temporadas, competiciones }) => {
       // reset selected sides when options change
       setSelectedEquipo(null);
       setSelectedRival(null);
-      setSelectedRivalId(null);
 
       setStep(2);
     } catch (error) {
@@ -214,30 +215,34 @@ const Create: React.FC<Props> = ({ temporadas, competiciones }) => {
     }
   };
 
-  const fieldsStep2: any[] = [
+  const allFieldsStep2: any[] = [
     { name: "temporada_id", label: "Temporada", type: "select", options: temporadasOptions, disabled: true },
     { name: "competicion_id", label: "Competición", type: "select", options: competicionesOptions, disabled: true },
-    { name: "campeonato_id", label: "Campeonato", type: "select", options: campeonatosOptions },
-    { name: "equipo_id", label: "Equipo (Local)", type: "select", options: equiposOptions, disabled: true },
+    // Solo aplica a competiciones FIFA, que son las únicas que cargan campeonatos
+    { name: "campeonato_id", label: "Campeonato", type: "select", options: campeonatosOptions, omit: campeonatosOptions.length === 0 },
+    { name: "equipo_id", label: "Equipo (Local)", type: "select", options: localEsRival ? rivalesOptions : equiposOptions, disabled: true },
     {
       name: "local_es_rival",
       label: "Local es rival",
       type: "boolean",
+      disabled: true,
     },
     {
       name: "visitante_es_rival",
       label: "Visitante es rival",
       type: "boolean",
+      disabled: true,
     },
+    // Fuera de FIFA el visitante siempre es el rival genérico (visitante_id forzado a 0): no hay nada que mostrar aquí
     {
       name: "visitante_id",
       label: "Visitante (Equipo)",
       type: "select",
-      options: equiposOptions,
-      disabled: !isFifa,
+      options: visitanteEsRival ? rivalesOptions : equiposOptions,
+      disabled: true,
+      omit: !isFifa,
     },
-    { name: "rival_id", label: "Rival (compatibilidad)", type: "select", options: rivalesOptions, disabled: !isFifa },
-    { name: "partido_como_local", label: "MVP", type: "boolean" },
+    { name: "partido_como_local", label: "Partido como local", type: "boolean" },
     // Dificultad justo antes de jornada
     {
       name: "dificultad",
@@ -252,10 +257,8 @@ const Create: React.FC<Props> = ({ temporadas, competiciones }) => {
         { value: "Legendario", label: "Legendario" },
         { value: "Ultimate", label: "Ultimate" },
       ],
-      value: selectedDificultad || "",
-      onChange: (value: string) => setSelectedDificultad(value),
     },
-    { name: "jornada", label: "Jornada", type: "string" },
+    { name: "jornada", label: "Jornada", type: "text" },
     { name: "valor_equipo", label: "Valor Equipo", type: "number" },
     { name: "valor_rival", label: "Valor rival", type: "number" },
     { name: "delantera_equipo", label: "DEL equipo", type: "number" },
@@ -306,7 +309,7 @@ const Create: React.FC<Props> = ({ temporadas, competiciones }) => {
       type: "dynamicArray",
       fields: [
         { name: "equipo_id", label: "Equipo ID", type: "number", default: selectedEquipo ? Number(selectedEquipo) : null, hidden: true },
-        { name: "jugador_id", label: "Jugador", type: "select", options: [...jugadoresEquipo, ...jugadoresRival] },
+        { name: "jugador_id", label: "Jugador", type: "select", options: jugadoresEquipo },
         { name: "tiros", label: "T", type: "number" },
         { name: "tiros_a_puerta", label: "TP", type: "number" },
         { name: "tiros_al_palo", label: "Palo", type: "number" },
@@ -332,7 +335,7 @@ const Create: React.FC<Props> = ({ temporadas, competiciones }) => {
       label: "Alineaciones Rival",
       type: "dynamicArray",
       fields: [
-        { name: "equipo_id", label: "Equipo ID", type: "number", default: (visitanteEsRival ? (selectedRivalId ? Number(selectedRivalId) : null) : (selectedRival ? Number(selectedRival) : null)), hidden: true },
+        { name: "equipo_id", label: "Equipo ID", type: "number", default: visitanteEquipoId, hidden: true },
         { name: "jugador_id", label: "Jugador", type: "select", options: jugadoresRival },
         { name: "tiros", label: "T", type: "number" },
         { name: "tiros_a_puerta", label: "TP", type: "number" },
@@ -362,15 +365,39 @@ const Create: React.FC<Props> = ({ temporadas, competiciones }) => {
         { name: "minuto", label: "Min", type: "number" },
         { name: "tipo_evento_id", label: "Tipo", type: "select", options: tiposEventosOptions },
         { name: "jugador_id", label: "Jugador", type: "select", options: [...jugadoresEquipo, ...jugadoresRival] },
-        { name: "local_id", label: "Local", type: "select", options: [
-          { value: selectedEquipo ? Number(selectedEquipo) : null, label: equipos.find(e => e.id.toString() === selectedEquipo)?.nombre || "Selecciona equipo" }
-        ]},
-        { name: "visitante_id", label: "Visitante", type: "select", options: [
-          { value: selectedRivalId ? Number(selectedRivalId) : (visitanteEsRival ? (selectedRival ? Number(selectedRival) : null) : null), label: (selectedRivalId ? (rivales.find(r => r.id === Number(selectedRivalId))?.nombre) : (visitanteEsRival ? (rivales.find(r => r.id.toString() === selectedRival)?.nombre) : (equipos.find(e => e.id.toString() === selectedRival)?.nombre))) || "Selecciona visitante" }
-        ]},
+        // equipo_id y rival_id son columnas independientes y nullable en `eventos`: dos selects
+        // separados, cada uno con su propia clave, así no comparten valor entre ellos.
+        {
+          name: "equipo_id",
+          label: "Equipo",
+          type: "select",
+          options: [
+            { value: CLEAR_OPTION_VALUE, label: "Seleccionar" },
+            {
+              value: selectedEquipo ? Number(selectedEquipo) : null,
+              label: equipos.find(e => e.id.toString() === selectedEquipo)?.nombre || "Equipo",
+            },
+          ],
+        },
+        {
+          name: "rival_id",
+          label: "Rival",
+          type: "select",
+          options: [
+            { value: CLEAR_OPTION_VALUE, label: "Seleccionar" },
+            {
+              value: visitanteEquipoId,
+              label: (visitanteEsRival
+                ? rivales.find(r => r.id.toString() === selectedRival)?.nombre
+                : equipos.find(e => e.id.toString() === selectedRival)?.nombre) || "Rival",
+            },
+          ],
+        },
       ],
     },
   ];
+
+  const fieldsStep2 = allFieldsStep2.filter((f) => !f.omit);
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
@@ -431,13 +458,10 @@ const Create: React.FC<Props> = ({ temporadas, competiciones }) => {
                 <div className="flex flex-col gap-2">
                   <Label>Local</Label>
                   <div className="flex items-center space-x-2 pb-2">
-                    <Checkbox
+                    <Switch
                       id="local_es_rival"
                       checked={localEsRival}
-                      onCheckedChange={(checked) => {
-                        const val = !!checked;
-                        setLocalEsRival(val);
-                      }}
+                      onCheckedChange={(checked) => setLocalEsRival(checked)}
                     />
                     <Label htmlFor="local_es_rival">Es rival</Label>
                   </div>
@@ -446,10 +470,10 @@ const Create: React.FC<Props> = ({ temporadas, competiciones }) => {
                     value={selectedEquipo?.toString() || ""}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder={isFifa ? "Selecciona un equipo local" : (localEsRival ? "Selecciona un rival (local)" : "Selecciona un equipo local")} />
+                      <SelectValue placeholder={localEsRival ? "Selecciona un rival (local)" : "Selecciona un equipo local"} />
                     </SelectTrigger>
                     <SelectContent>
-                      {(isFifa ? equiposOptions : (localEsRival ? rivalesOptions : equiposOptions))
+                      {(localEsRival ? rivalesOptions : equiposOptions)
                         .map((v) => (
                           <SelectItem key={v.value} value={v.value.toString()}>
                             {v.label}
@@ -462,13 +486,10 @@ const Create: React.FC<Props> = ({ temporadas, competiciones }) => {
                 <div className="flex flex-col gap-2">
                   <Label>Visitante</Label>
                   <div className="flex items-center space-x-2 pb-2">
-                    <Checkbox
+                    <Switch
                       id="visitante_es_rival"
                       checked={visitanteEsRival}
-                      onCheckedChange={(checked) => {
-                        const esRival = !!checked;
-                        setVisitanteEsRival(esRival);
-                      }}
+                      onCheckedChange={(checked) => setVisitanteEsRival(checked)}
                     />
                     <Label htmlFor="visitante_es_rival">Es rival</Label>
                   </div>
@@ -477,33 +498,15 @@ const Create: React.FC<Props> = ({ temporadas, competiciones }) => {
                     value={selectedRival?.toString() || ""}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecciona un equipo visitante" />
+                      <SelectValue placeholder={visitanteEsRival ? "Selecciona un rival (visitante)" : "Selecciona un equipo visitante"} />
                     </SelectTrigger>
                     <SelectContent>
-                      {equiposOptions
-                        .filter((opt) => opt.value.toString() !== selectedEquipo)
-                        .map((v) => (
-                          <SelectItem key={v.value} value={v.value.toString()}>
-                            {v.label}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <Label>Rival (compatibilidad)</Label>
-                  <Select
-                    onValueChange={(value) => setSelectedRivalId(String(value))}
-                    value={selectedRivalId?.toString() || ""}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecciona un rival (opcional)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {rivalesOptions.map((r) => (
-                        <SelectItem key={r.value} value={r.value.toString()}>
-                          {r.label}
+                      {(visitanteEsRival
+                        ? rivalesOptions
+                        : equiposOptions.filter((opt) => opt.value.toString() !== selectedEquipo)
+                      ).map((v) => (
+                        <SelectItem key={v.value} value={v.value.toString()}>
+                          {v.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -558,10 +561,10 @@ const Create: React.FC<Props> = ({ temporadas, competiciones }) => {
                 
 
                 <div className="flex items-center space-x-2">
-                  <Checkbox
+                  <Switch
                     id="partido_como_local"
                     checked={esLocal}
-                    onCheckedChange={(checked) => setEsLocal(!!checked)}
+                    onCheckedChange={(checked) => setEsLocal(checked)}
                   />
                   <Label htmlFor="partido_como_local">Partido como local</Label>
                 </div>
@@ -597,7 +600,6 @@ const Create: React.FC<Props> = ({ temporadas, competiciones }) => {
         {step === 3 && (
           <div>
             <h1 className="text-2xl font-bold mb-4">Nuevo Partido</h1>
-            {console.log('[Create] step3 debug', { visitanteEquipoId, selectedRival, visitanteEsRival, isFifa })}
             <DynamicForm
               fields={fieldsStep2}
               method="post"
@@ -613,9 +615,7 @@ const Create: React.FC<Props> = ({ temporadas, competiciones }) => {
                 visitante_es_rival: visitanteEsRival ? 1 : 0,
                 // visitante_id: para NO-FIFA forzamos 0 (visitante como rival genérico). En FIFA usamos la selección.
                 visitante_id: (!isFifa) ? 0 : ((isFifa && selectedRival) ? Number(selectedRival) : (visitanteEquipoId ?? (!visitanteEsRival && selectedRival ? Number(selectedRival) : null))),
-                // rival_id siempre apunta a la tabla `rivales`: preferimos selectedRivalId (compatibilidad FIFA),
-                // si no existe y visitanteEsRival es true usamos selectedRival (id del rival).
-                rival_id: selectedRivalId ? Number(selectedRivalId) : (visitanteEsRival ? (selectedRival ? Number(selectedRival) : null) : null),
+                rival_id: derivedRivalId,
                 partido_como_local: esLocal ? 1 : 0,
                 jornada: "",
                 goles_equipo: 0,
