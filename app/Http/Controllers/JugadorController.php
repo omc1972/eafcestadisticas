@@ -208,7 +208,9 @@ class JugadorController extends Controller
             $jugador->estilos()->sync([]);
         }
 
-        return redirect()->route('jugadores.index')->with('success','Jugador modificado con éxito');
+        return redirect()
+            ->route('jugadores.index', $request->filled('page') ? ['page' => $request->query('page')] : [])
+            ->with('success', 'Jugador modificado con éxito');
     }
 
     private function getValidated(Request $request) {

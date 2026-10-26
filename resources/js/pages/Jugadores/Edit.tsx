@@ -76,6 +76,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const Edit: React.FC<Props> = ({ jugador, estilos, estiloJugadores }) => {
     const [cancelUrl, setCancelUrl] = useState("/jugadores");
+    const [updateUrl, setUpdateUrl] = useState(`/jugadores/${jugador.id}`);
     const [posicion, setPosicion] = useState(jugador.posicion || "");
 
     useEffect(() => {
@@ -83,6 +84,7 @@ const Edit: React.FC<Props> = ({ jugador, estilos, estiloJugadores }) => {
         const page = params.get("page");
         if (page) {
             setCancelUrl(`/jugadores?page=${page}`);
+            setUpdateUrl(`/jugadores/${jugador.id}?page=${page}`);
         }
     }, []);
 
@@ -205,7 +207,7 @@ const Edit: React.FC<Props> = ({ jugador, estilos, estiloJugadores }) => {
                 <DynamicForm
                     fields={fields}
                     method="put"
-                    action={`/jugadores/${jugador.id}`}
+                    action={updateUrl}
                     cancel={cancelUrl}
                     initialValues={{
                         id: jugador.id ?? 0,
