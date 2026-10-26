@@ -1,10 +1,12 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "@inertiajs/react";
 import DynamicFieldArray from "./DynamicFieldArray";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { Select as ShadSelect, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import SearchableSelect from "./SearchableSelect";
 
 export type FieldType =
   | "text"
@@ -12,9 +14,12 @@ export type FieldType =
   | "password"
   | "number"
   | "select"
+  | "searchSelect"
   | "boolean"
   | "dynamicArray"
-  | "multiCheckbox"; // ✅ nuevo tipo para checkboxes múltiples
+  | "multiCheckbox" // ✅ nuevo tipo para checkboxes múltiples
+  | "file"
+  | "toggleButtons"; // botones tipo chip que marcan/desmarcan un valor (alternativa robusta a un <select>)
 
 export interface FieldConfig {
   name: string;
@@ -24,6 +29,8 @@ export interface FieldConfig {
   default?: any;
   fields?: FieldConfig[];
   hidden?: boolean;
+  /** Carpeta pública (storage/app/public/<accept>) donde se sirve la imagen ya guardada, para la vista previa */
+  previewPath?: string;
 }
 
 interface DynamicFormProps {
@@ -46,6 +53,8 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
   onFieldChange,
 }) => {
   const { data, setData, errors, processing, post, put, patch } = useForm(initialValues);
+  const setFieldData = setData as unknown as (name: string, value: any) => void;
+  const [filePreviews, setFilePreviews] = useState<Record<string, string>>({});
 
   const getSelectValue = (value: any) => {
     if (value === null || value === undefined) return "";
@@ -81,7 +90,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
                 <DynamicFieldArray
                   field={field}
                   data={data[field.name] ?? []}
-                  setData={setData}
+                  setData={setFieldData}
                   errors={errors}
                 />
               </div>
@@ -101,7 +110,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
                         onCheckedChange={(checked) => {
                           const current: any[] = data[field.name] ?? [];
                           const newValue = checked ? [...current, opt.value] : current.filter((v) => v !== opt.value);
-                          setData(field.name, newValue);
+                          setFieldData(field.name, newValue);
                           onFieldChange?.(field.name, newValue);
                         }}
                       />
@@ -111,22 +120,77 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
                     </div>
                   ))}
                 </div>
-                {errors[field.name] && <p className="text-red-500 text-sm mt-1">{errors[field.name]}</p>}
+                {errors[field.name] && <p className="text-destructive text-sm mt-1">{errors[field.name]}</p>}
               </div>
             );
           }
 
           if (field.type === "boolean") {
             return (
-              <div key={field.name}>
-                <Checkbox
+              <div key={field.name} className="flex items-center space-x-2">
+                <Switch
+                  id={field.name}
                   checked={!!data[field.name]}
-                  onCheckedChange={(checked) => setData(field.name, checked)}
+                  onCheckedChange={(checked) => setFieldData(field.name, checked)}
                   disabled={Boolean((field as any).disabled)}
-                >
-                  {field.label}
-                </Checkbox>
-                {errors[field.name] && <p className="text-red-500 text-sm mt-1">{errors[field.name]}</p>}
+                />
+                <label htmlFor={field.name} className="text-sm font-medium">{field.label}</label>
+                {errors[field.name] && <p className="text-destructive text-sm mt-1">{errors[field.name]}</p>}
+              </div>
+            );
+          }
+
+          if (field.type === "file") {
+            const currentValue = data[field.name];
+            const previewUrl =
+              filePreviews[field.name] ??
+              (typeof currentValue === "string" && currentValue
+                ? `/storage/${field.previewPath ?? "images"}/${currentValue}`
+                : null);
+
+            return (
+              <div key={field.name}>
+                <label className="block font-medium mb-1">{field.label}</label>
+                {previewUrl && (
+                  <img
+                    src={previewUrl}
+                    alt={field.label}
+                    className="h-16 w-16 object-contain mb-2 rounded border bg-muted"
+                  />
+                )}
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] ?? null;
+                    setFieldData(field.name, file);
+                    onFieldChange?.(field.name, file);
+                    if (file) {
+                      setFilePreviews((prev) => ({ ...prev, [field.name]: URL.createObjectURL(file) }));
+                    }
+                  }}
+                  disabled={Boolean((field as any).disabled)}
+                />
+                {errors[field.name] && <p className="text-destructive text-sm mt-1">{errors[field.name]}</p>}
+              </div>
+            );
+          }
+
+          if (field.type === "searchSelect") {
+            return (
+              <div key={field.name}>
+                <label className="block font-medium mb-1">{field.label}</label>
+                <SearchableSelect
+                  value={data[field.name]}
+                  options={field.options ?? []}
+                  onChange={(value) => {
+                    setFieldData(field.name, value);
+                    onFieldChange?.(field.name, value);
+                  }}
+                  disabled={Boolean((field as any).disabled)}
+                  placeholder={`Buscar ${field.label.toLowerCase()}...`}
+                />
+                {errors[field.name] && <p className="text-destructive text-sm mt-1">{errors[field.name]}</p>}
               </div>
             );
           }
@@ -139,7 +203,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
                   value={getSelectValue(data[field.name])}
                   onValueChange={(value) => {
                     const parsedValue = parseSelectValue(field, value);
-                    setData(field.name, parsedValue);
+                    setFieldData(field.name, parsedValue);
                     onFieldChange?.(field.name, parsedValue);
                   }}
                   disabled={Boolean((field as any).disabled)}
@@ -155,7 +219,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
                     ))}
                   </SelectContent>
                 </ShadSelect>
-                {errors[field.name] && <p className="text-red-500 text-sm mt-1">{errors[field.name]}</p>}
+                {errors[field.name] && <p className="text-destructive text-sm mt-1">{errors[field.name]}</p>}
               </div>
             );
           }
@@ -168,12 +232,12 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
                 type={field.type}
                 value={data[field.name] ?? ""}
                 onChange={(e) => {
-                  setData(field.name, e.target.value);
+                  setFieldData(field.name, e.target.value);
                   onFieldChange?.(field.name, e.target.value);
                 }}
                 disabled={Boolean((field as any).disabled)}
               />
-              {errors[field.name] && <p className="text-red-500 text-sm mt-1">{errors[field.name]}</p>}
+              {errors[field.name] && <p className="text-destructive text-sm mt-1">{errors[field.name]}</p>}
             </div>
           );
         };

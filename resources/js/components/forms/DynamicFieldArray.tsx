@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import SearchableSelect from "./SearchableSelect";
 import { Plus, Trash2 } from "lucide-react";
 
 interface DynamicFieldArrayProps {
@@ -13,8 +14,12 @@ interface DynamicFieldArrayProps {
   errors: Record<string, any>;
 }
 
+/** Valor reservado para la opción "Seleccionar" (vaciar el campo) en los selects de un dynamicArray. */
+export const CLEAR_OPTION_VALUE = "__clear__";
+
 const DynamicFieldArray: React.FC<DynamicFieldArrayProps> = ({ field, data, setData, errors }) => {
   const parseSelectValue = (config: FieldConfig, value: string) => {
+    if (value === CLEAR_OPTION_VALUE) return null;
     const matchedOption = config.options?.find((opt) => String(opt.value) === value);
     if (matchedOption && typeof matchedOption.value === "number") {
       const parsed = Number(value);
@@ -55,10 +60,11 @@ const DynamicFieldArray: React.FC<DynamicFieldArrayProps> = ({ field, data, setD
 
       {data.map((row, index) => (
         <div key={index} className="flex flex-wrap gap-2 items-center border border-border/50 rounded-lg px-3 py-2 bg-muted/20">
-          {field.fields?.map((f) => (
+          {field.fields?.map((f, fi) => (
             // skip rendering hidden fields (they still exist in row data)
+            // la key lleva el índice porque dos campos pueden compartir `name` (dos selectores sobre la misma clave)
             f.hidden ? null : (
-            <div key={f.name} className={f.type === "boolean" ? "flex-none" : "flex-1 min-w-[120px]"}>
+            <div key={`${f.name}_${fi}`} className={f.type === "boolean" ? "flex-none" : "flex-1 min-w-[120px]"}>
               {f.type === "boolean" ? (
                 <label
                   className={`flex items-center gap-2 px-3 h-9 rounded-md border cursor-pointer transition-all select-none ${
@@ -74,35 +80,75 @@ const DynamicFieldArray: React.FC<DynamicFieldArrayProps> = ({ field, data, setD
                     disabled={Boolean((f as any).disabled)}
                   />
                 </label>
-              ) : f.type === "select" ? (
-                <Select
-                  value={row[f.name] ? String(row[f.name]) : ""}
-                  onValueChange={(value) => handleChange(index, f.name, parseSelectValue(f, value))}
-                  disabled={Boolean((f as any).disabled)}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Seleccione..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {f.options?.map((opt) => (
-                      <SelectItem key={opt.value} value={String(opt.value)}>
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <Input
-                  type={f.type}
+              ) : f.type === "searchSelect" ? (
+                <SearchableSelect
                   value={row[f.name]}
-                  onChange={(e) => handleChange(index, f.name, e.target.value)}
-                  placeholder={f.label}
+                  options={f.options ?? []}
+                  onChange={(value) => handleChange(index, f.name, parseSelectValue(f, String(value)))}
                   disabled={Boolean((f as any).disabled)}
+                  placeholder={`Buscar ${f.label.toLowerCase()}...`}
                 />
+              ) : f.type === "select" ? (
+                <>
+                  <label className="block text-xs text-muted-foreground mb-1">{f.label}</label>
+                  <Select
+                    value={row[f.name] === null || row[f.name] === undefined || row[f.name] === "" ? "" : String(row[f.name])}
+                    onValueChange={(value) => handleChange(index, f.name, parseSelectValue(f, value))}
+                    disabled={Boolean((f as any).disabled)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Seleccione..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {f.options?.map((opt) => (
+                        <SelectItem key={String(opt.value)} value={String(opt.value)}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </>
+              ) : f.type === "toggleButtons" ? (
+                <div>
+                  <label className="block text-xs text-muted-foreground mb-1">{f.label}</label>
+                  <div className="flex gap-1">
+                    {f.options?.map((opt) => {
+                      const current = row[f.name];
+                      const isActive =
+                        current !== null && current !== undefined && current !== "" && String(current) === String(opt.value);
+                      return (
+                        <button
+                          key={String(opt.value)}
+                          type="button"
+                          disabled={Boolean((f as any).disabled)}
+                          onClick={() => handleChange(index, f.name, isActive ? null : parseSelectValue(f, String(opt.value)))}
+                          className={`px-3 h-9 rounded-md border text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                            isActive
+                              ? "border-primary/50 bg-primary/10 text-primary"
+                              : "border-input bg-background text-muted-foreground hover:border-primary/30 hover:bg-primary/5"
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <label className="block text-xs text-muted-foreground mb-1">{f.label}</label>
+                  <Input
+                    type={f.type}
+                    value={row[f.name]}
+                    onChange={(e) => handleChange(index, f.name, e.target.value)}
+                    placeholder={f.label}
+                    disabled={Boolean((f as any).disabled)}
+                  />
+                </>
               )}
 
               {errors?.[field.name]?.[index]?.[f.name] && (
-                <p className="text-red-500 text-sm mt-1">
+                <p className="text-destructive text-sm mt-1">
                   {errors[field.name][index][f.name]}
                 </p>
               )}
