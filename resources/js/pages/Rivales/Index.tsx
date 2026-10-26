@@ -59,10 +59,7 @@ const Index: React.FC<Props> = ({ rivales }) => {
             onChange={(e) => setFilter(e.target.value)}
             className="max-w-md"
           />
-          <Button
-            onClick={() => router.get("/rivales/create")}
-            className="bg-blue-600 text-white hover:bg-blue-700"
-          >
+          <Button onClick={() => router.get("/rivales/create")}>
             +
           </Button>
         </div>
@@ -70,7 +67,7 @@ const Index: React.FC<Props> = ({ rivales }) => {
         {filtered.length > 0 ? (
           <Table className="w-full">
             <TableHeader>
-              <TableRow className="bg-gray-200">
+              <TableRow>
                 <TableHead className="p-2 border">ID</TableHead>
                 <TableHead className="p-2 border">Nombre</TableHead>
                 <TableHead className="p-2 border">Código</TableHead>
@@ -85,7 +82,7 @@ const Index: React.FC<Props> = ({ rivales }) => {
               {filtered.map((rival, i) => (
                 <TableRow
                   key={rival.id}
-                  className={`cursor-pointer ${i % 2 === 0 ? "bg-gray-800" : "bg-gray-750"}`}
+                  className={`cursor-pointer ${i % 2 === 0 ? "" : "bg-muted/30"}`}
                   onClick={() => router.get(`/rivales/${rival.id}`)}
                 >
                   <TableCell className="p-2 border">{rival.id}</TableCell>
@@ -97,7 +94,7 @@ const Index: React.FC<Props> = ({ rivales }) => {
                   <TableCell className="p-2 border">
                     {rival.divisiones.length}
                   </TableCell>
-                  <TableCell onClick={(e) => e.stopPropagation()}>
+                  <TableCell className="p-2 border" onClick={(e) => e.stopPropagation()}>
                     <AccionesTabla id={rival.id} basePath="/rivales" />
                   </TableCell>
                 </TableRow>
@@ -106,8 +103,8 @@ const Index: React.FC<Props> = ({ rivales }) => {
           </Table>
         ) : (
           <div className="text-center py-8">
-            <p className="text-gray-500 text-lg">No hay rivales registrados</p>
-            <p className="text-gray-400 text-sm">
+            <p className="text-muted-foreground text-lg">No hay rivales registrados</p>
+            <p className="text-muted-foreground text-sm">
               Crea uno nuevo con el botón +
             </p>
           </div>

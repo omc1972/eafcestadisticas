@@ -63,16 +63,16 @@ const Index: React.FC<Props> = ({ equipaciones }) => {
                         onChange={(e) => setGlobalFilter(e.target.value)}
                         className="max-w-md"
                       />
-                    <Button onClick={() => router.get("/equipaciones/create")} className="bg-blue-600 text-white hover:bg-blue-700">+</Button>
+                    <Button onClick={() => router.get("/equipaciones/create")}>+</Button>
                 </div>
                 {paginated.length > 0 ? (
                     <>
                         <Table className="w-full">
                             <TableHeader>
-                        <TableRow className="bg-gray-100">
-                        <TableHead className="p-2 font-semibold text-left">ID</TableHead>
-                        <TableHead className="p-2 font-semibold text-left">Nombre</TableHead>
-                        <TableHead className="p-2 font-semibold text-left">Acciones</TableHead>
+                        <TableRow>
+                        <TableHead className="p-2 border font-semibold text-left">ID</TableHead>
+                        <TableHead className="p-2 border font-semibold text-left">Nombre</TableHead>
+                        <TableHead className="p-2 border font-semibold text-left">Acciones</TableHead>
                         </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -80,15 +80,15 @@ const Index: React.FC<Props> = ({ equipaciones }) => {
                         <TableRow
                             key={row.id}
                             className={`${
-                            i % 2 === 0 ? "bg-gray-800" : "bg-gray-750"
-                            } hover:bg-gray-100 cursor-pointer`}
+                            i % 2 === 0 ? "" : "bg-muted/30"
+                            } cursor-pointer`}
                             onClick={() => router.get(`/equipaciones/${row.id}/edit`)}
                         >
                             <TableCell className="p-2 border">{row.id}</TableCell>
                             <TableCell className="p-2 border">{row.nombre}</TableCell>
-                            <TableCell><AccionesTabla 
-                              id={row.id} 
-                              basePath="/equipaciones" 
+                            <TableCell className="p-2 border"><AccionesTabla
+                              id={row.id}
+                              basePath="/equipaciones"
                             /></TableCell>
                         </TableRow>
                         ))}
@@ -105,9 +105,9 @@ const Index: React.FC<Props> = ({ equipaciones }) => {
                     </>
             ) : (
                 <div className="text-center py-8">
-                    <i className="pi pi-inbox text-4xl text-gray-400 mb-2"></i>
-                    <p className="text-gray-500 text-lg">No se encontraron equipaciones</p>
-                    <p className="text-gray-400 text-sm">
+                    <i className="pi pi-inbox text-4xl text-muted-foreground mb-2"></i>
+                    <p className="text-muted-foreground text-lg">No se encontraron equipaciones</p>
+                    <p className="text-muted-foreground text-sm">
                         No hay equipaciones registradas en el sistema
                     </p>
                 </div>

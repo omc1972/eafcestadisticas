@@ -66,13 +66,13 @@ return (
             onChange={(e) => setGlobalFilter(e.target.value)}
             className="max-w-md"
           />
-          <Button onClick={() => router.get("/equipos/create")} className="bg-blue-600 text-white hover:bg-blue-700">+</Button>
+          <Button onClick={() => router.get("/equipos/create")}>+</Button>
         </div>
         {paginated.length > 0 ? (
           <>
             <Table className="w-full">
             <TableHeader>
-              <TableRow className="bg-gray-200">
+              <TableRow>
                 <TableHead className="p-2 border"></TableHead>
                 <TableHead className="p-2 border">Nombre</TableHead>
                 <TableHead className="p-2 border">Código</TableHead>
@@ -85,7 +85,7 @@ return (
                 <TableRow
                   key={row.id}
                   className={`cursor-pointer ${
-                    i % 2 === 0 ? "bg-gray-800" : "bg-gray-750"
+                    i % 2 === 0 ? "" : "bg-muted/30"
                   }`}
                   onClick={() => router.get(`/equipos/${row.id}`)}
                 >
@@ -93,9 +93,9 @@ return (
                   <TableCell className="p-2 border">{row.nombre}</TableCell>
                   <TableCell className="p-2 border">{row.codigo}</TableCell>
                   <TableCell className="p-2 border">{row.estadio.nombre}</TableCell>
-                  <TableCell><AccionesTabla 
-                              id={row.id} 
-                              basePath="/equipos" 
+                  <TableCell className="p-2 border"><AccionesTabla
+                              id={row.id}
+                              basePath="/equipos"
                             /></TableCell>
                   </TableRow>
                 ))}
@@ -112,11 +112,11 @@ return (
             </>
           ) : (
             <div className="text-center py-8">
-              <i className="pi pi-inbox text-4xl text-gray-400 mb-2"></i>
-              <p className="text-gray-500 text-lg">
+              <i className="pi pi-inbox text-4xl text-muted-foreground mb-2"></i>
+              <p className="text-muted-foreground text-lg">
                 No se encontraron equipos
               </p>
-              <p className="text-gray-400 text-sm">
+              <p className="text-muted-foreground text-sm">
                 No hay equipos registrados en el sistema
               </p>
             </div>

@@ -103,7 +103,7 @@ export default function Show({ temporada, ligas }: Props) {
                                     onClick={() => handleExpand(liga.id)}
                                 >
                                     <div className="flex items-center gap-2">
-                                        <Trophy className="h-5 w-5 text-yellow-500" />
+                                        <Trophy className="h-5 w-5 text-warning" />
                                         {liga.nombre}
                                     </div>
                                     <Button variant="ghost" size="icon" tabIndex={-1} type="button">
@@ -129,15 +129,15 @@ export default function Show({ temporada, ligas }: Props) {
                                         <div className="border-t pt-3">
                                             <div className="grid grid-cols-3 gap-2 text-center text-sm">
                                                 <div>
-                                                    <p className="text-green-600 font-bold">{liga.victorias}</p>
+                                                    <p className="text-success font-bold">{liga.victorias}</p>
                                                     <p className="text-xs text-muted-foreground">V</p>
                                                 </div>
                                                 <div>
-                                                    <p className="text-yellow-600 font-bold">{liga.empates}</p>
+                                                    <p className="text-warning font-bold">{liga.empates}</p>
                                                     <p className="text-xs text-muted-foreground">E</p>
                                                 </div>
                                                 <div>
-                                                    <p className="text-red-600 font-bold">{liga.derrotas}</p>
+                                                    <p className="text-destructive font-bold">{liga.derrotas}</p>
                                                     <p className="text-xs text-muted-foreground">D</p>
                                                 </div>
                                             </div>
@@ -145,27 +145,27 @@ export default function Show({ temporada, ligas }: Props) {
                                         <div className="border-t pt-3">
                                             <div className="flex items-center justify-between text-sm">
                                                 <span className="flex items-center gap-2 text-muted-foreground">
-                                                    <TrendingUp className="h-4 w-4 text-green-500" />
+                                                    <TrendingUp className="h-4 w-4 text-success" />
                                                     Goles a Favor
                                                 </span>
-                                                <span className="font-semibold text-green-600">{liga.goles_favor}</span>
+                                                <span className="font-semibold text-success">{liga.goles_favor}</span>
                                             </div>
                                             <div className="flex items-center justify-between text-sm mt-2">
                                                 <span className="flex items-center gap-2 text-muted-foreground">
-                                                    <TrendingDown className="h-4 w-4 text-red-500" />
+                                                    <TrendingDown className="h-4 w-4 text-destructive" />
                                                     Goles en Contra
                                                 </span>
-                                                <span className="font-semibold text-red-600">{liga.goles_contra}</span>
+                                                <span className="font-semibold text-destructive">{liga.goles_contra}</span>
                                             </div>
                                             <div className="flex items-center justify-between text-sm mt-2 pt-2 border-t">
                                                 <span className="font-medium">Diferencia</span>
                                                 <span
                                                     className={`font-bold ${
                                                         liga.diferencia_goles > 0
-                                                            ? 'text-green-600'
+                                                            ? 'text-success'
                                                             : liga.diferencia_goles < 0
-                                                            ? 'text-red-600'
-                                                            : 'text-gray-500'
+                                                            ? 'text-destructive'
+                                                            : 'text-muted-foreground'
                                                     }`}
                                                 >
                                                     {liga.diferencia_goles > 0 ? '+' : ''}
@@ -177,7 +177,7 @@ export default function Show({ temporada, ligas }: Props) {
                                         <div className="flex justify-end mt-2">
                                             <a
                                                 href={`/temporadas/${temporada.id}/ligas/${liga.id}/estadisticas`}
-                                                className="inline-flex items-center px-3 py-1.5 rounded bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-colors"
+                                                className="inline-flex items-center px-3 py-1.5 rounded bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors"
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                             >
@@ -201,9 +201,9 @@ export default function Show({ temporada, ligas }: Props) {
                     </div>
                 ) : (
                     <div className="text-center py-12">
-                        <Trophy className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-500 text-lg">No hay ligas en esta temporada</p>
-                        <p className="text-gray-400 text-sm mt-2">
+                        <Trophy className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                        <p className="text-muted-foreground text-lg">No hay ligas en esta temporada</p>
+                        <p className="text-muted-foreground text-sm mt-2">
                             Añade equipos a las ligas y ordénalos desde "Sortear Ligas"
                         </p>
                         <Button

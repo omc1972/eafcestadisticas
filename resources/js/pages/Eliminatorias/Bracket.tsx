@@ -61,14 +61,14 @@ export default function BracketEliminatoria({ campeonato, equipos_participantes,
             <h2 className="text-lg font-semibold mb-2">Equipos participantes</h2>
                <div className="flex flex-wrap gap-4">
                  {equipos_participantes.map(eq => (
-                   <div key={eq.id} className="flex items-center gap-2 border border-gray-400 rounded px-3 py-1 bg-gray-800 text-white">
+                   <div key={eq.id} className="flex items-center gap-2 border border-border rounded px-3 py-1 bg-card text-foreground">
                      {eq.escudo && <img src={`/storage/images/${eq.escudo}`} alt={eq.nombre} className="w-6 h-6 object-contain" />}
                      <span>{eq.nombre}</span>
                    </div>
                  ))}
                </div>
           </div>
-             <Button onClick={handleSortearCopa} className="h-10 px-6 text-base font-semibold bg-gray-800 text-white border border-gray-400 hover:bg-gray-700">
+             <Button onClick={handleSortearCopa} className="h-10 px-6 text-base font-semibold">
                Sortear Copa
              </Button>
         </div>

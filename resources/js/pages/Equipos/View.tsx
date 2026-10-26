@@ -235,7 +235,7 @@ const View: React.FC<Props> = ({ equipo, partidosStats, partidosStatsPorCompetic
                     <div key={j.id} className="border rounded-lg p-4 space-y-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="font-bold text-lg min-w-8 h-8 flex items-center justify-center bg-blue-500 text-white rounded">
+                          <div className="font-bold text-lg min-w-8 h-8 flex items-center justify-center bg-primary text-primary-foreground rounded">
                             {j.dorsal ?? "-"}
                           </div>
                           <div>

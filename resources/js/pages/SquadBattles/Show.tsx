@@ -101,9 +101,9 @@ const EquipoTagSelector: React.FC<{
       {selected.length > 0 && (
         <div className="flex flex-wrap gap-1">
           {selected.map(eq => (
-            <span key={eq.id} className="flex items-center gap-1 bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
+            <span key={eq.id} className="flex items-center gap-1 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full">
               {eq.nombre}
-              <button type="button" onClick={() => onRemove(eq.id)} className="hover:text-red-200">×</button>
+              <button type="button" onClick={() => onRemove(eq.id)} className="hover:text-destructive">×</button>
             </span>
           ))}
         </div>
@@ -168,19 +168,19 @@ const ClasificacionTab: React.FC<{ estadisticas: Estadistica[] }> = ({ estadisti
         </TableHeader>
         <TableBody>
           {estadisticas.map((stat, index) => (
-            <TableRow key={stat.equipo.id} className={index === 0 ? 'bg-green-500/10' : ''}>
+            <TableRow key={stat.equipo.id} className={index === 0 ? 'bg-success/10' : ''}>
               <TableCell className="font-bold">
-                {index === 0 && <Trophy className="h-4 w-4 inline text-yellow-500 mr-1" />}
+                {index === 0 && <Trophy className="h-4 w-4 inline text-warning mr-1" />}
                 {index + 1}
               </TableCell>
               <TableCell className="font-medium">{stat.equipo.nombre}</TableCell>
               <TableCell className="text-center">{stat.partidos_jugados}</TableCell>
-              <TableCell className="text-center text-green-600">{stat.victorias}</TableCell>
-              <TableCell className="text-center text-yellow-600">{stat.empates}</TableCell>
-              <TableCell className="text-center text-red-600">{stat.derrotas}</TableCell>
+              <TableCell className="text-center text-success">{stat.victorias}</TableCell>
+              <TableCell className="text-center text-warning">{stat.empates}</TableCell>
+              <TableCell className="text-center text-destructive">{stat.derrotas}</TableCell>
               <TableCell className="text-center">{stat.goles_favor}</TableCell>
               <TableCell className="text-center">{stat.goles_contra}</TableCell>
-              <TableCell className={`text-center font-medium ${stat.diferencia_goles > 0 ? 'text-green-600' : stat.diferencia_goles < 0 ? 'text-red-600' : ''}`}>
+              <TableCell className={`text-center font-medium ${stat.diferencia_goles > 0 ? 'text-success' : stat.diferencia_goles < 0 ? 'text-destructive' : ''}`}>
                 {stat.diferencia_goles > 0 ? '+' : ''}{stat.diferencia_goles}
               </TableCell>
               <TableCell className="text-center font-bold text-lg">{stat.puntos}</TableCell>
@@ -195,45 +195,45 @@ const ClasificacionTab: React.FC<{ estadisticas: Estadistica[] }> = ({ estadisti
 const EstadisticasEquiposTab: React.FC<{ stats: Record<string, Estadistica[]> }> = ({ stats }) => (
   <div className="space-y-8">
     <div>
-      <h3 className="text-xl font-semibold mb-4 text-green-700">⚡ ATAQUE</h3>
+      <h3 className="text-xl font-semibold mb-4 text-success">⚡ ATAQUE</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <Card><CardHeader><CardTitle className="text-sm flex items-center gap-2"><TrendingUp className="h-4 w-4 text-green-600" />Top 5 Goles</CardTitle></CardHeader><CardContent><TopEquiposTable data={stats.goles_favor || []} field="goles_favor" label="GF" colorClass="text-green-600" /></CardContent></Card>
-        <Card><CardHeader><CardTitle className="text-sm">🎯 Tiros</CardTitle></CardHeader><CardContent><TopEquiposTable data={stats.tiros_realizados || []} field="tiros_realizados" label="TR" colorClass="text-blue-600" /></CardContent></Card>
-        <Card><CardHeader><CardTitle className="text-sm">🪵 Tiros al Palo</CardTitle></CardHeader><CardContent><TopEquiposTable data={stats.tiros_al_palo || []} field="tiros_al_palo" label="Palo" colorClass="text-amber-700" /></CardContent></Card>
+        <Card><CardHeader><CardTitle className="text-sm flex items-center gap-2"><TrendingUp className="h-4 w-4 text-success" />Top 5 Goles</CardTitle></CardHeader><CardContent><TopEquiposTable data={stats.goles_favor || []} field="goles_favor" label="GF" colorClass="text-success" /></CardContent></Card>
+        <Card><CardHeader><CardTitle className="text-sm">🎯 Tiros</CardTitle></CardHeader><CardContent><TopEquiposTable data={stats.tiros_realizados || []} field="tiros_realizados" label="TR" colorClass="text-primary" /></CardContent></Card>
+        <Card><CardHeader><CardTitle className="text-sm">🪵 Tiros al Palo</CardTitle></CardHeader><CardContent><TopEquiposTable data={stats.tiros_al_palo || []} field="tiros_al_palo" label="Palo" colorClass="text-warning" /></CardContent></Card>
       </div>
     </div>
 
     <div>
-      <h3 className="text-xl font-semibold mb-4 text-blue-700">🛡️ DEFENSA</h3>
+      <h3 className="text-xl font-semibold mb-4 text-primary">🛡️ DEFENSA</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <Card><CardHeader><CardTitle className="text-sm">🟩 Balones Ganados</CardTitle></CardHeader><CardContent><TopEquiposTable data={stats.balones_ganados_equipo || []} field="balones_ganados_equipo" label="BG" colorClass="text-green-700" /></CardContent></Card>
-        <Card><CardHeader><CardTitle className="text-sm text-red-600">Menos Goles en Contra</CardTitle></CardHeader><CardContent><TopEquiposTable data={stats.goles_contra || []} field="goles_contra" label="GC" colorClass="text-red-600" /></CardContent></Card>
-        <Card><CardHeader><CardTitle className="text-sm">🛑 Intercepciones</CardTitle></CardHeader><CardContent><TopEquiposTable data={stats.interceciones_equipo || []} field="interceciones_equipo" label="INT" colorClass="text-blue-700" /></CardContent></Card>
+        <Card><CardHeader><CardTitle className="text-sm">🟩 Balones Ganados</CardTitle></CardHeader><CardContent><TopEquiposTable data={stats.balones_ganados_equipo || []} field="balones_ganados_equipo" label="BG" colorClass="text-success" /></CardContent></Card>
+        <Card><CardHeader><CardTitle className="text-sm text-destructive">Menos Goles en Contra</CardTitle></CardHeader><CardContent><TopEquiposTable data={stats.goles_contra || []} field="goles_contra" label="GC" colorClass="text-destructive" /></CardContent></Card>
+        <Card><CardHeader><CardTitle className="text-sm">🛑 Intercepciones</CardTitle></CardHeader><CardContent><TopEquiposTable data={stats.interceciones_equipo || []} field="interceciones_equipo" label="INT" colorClass="text-primary" /></CardContent></Card>
       </div>
     </div>
 
     <div>
-      <h3 className="text-xl font-semibold mb-4 text-purple-700">💪 FÍSICO</h3>
+      <h3 className="text-xl font-semibold mb-4 text-primary">💪 FÍSICO</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <Card><CardHeader><CardTitle className="text-sm">⏱️ Distancia</CardTitle></CardHeader><CardContent><TopEquiposTable data={stats.distancia_recorrida || []} field="distancia_recorrida" label="Kms" colorClass="text-green-600" /></CardContent></Card>
-        <Card><CardHeader><CardTitle className="text-sm">📊 Pases</CardTitle></CardHeader><CardContent><TopEquiposTable data={stats.pases || []} field="pases" label="Pases" colorClass="text-purple-600" /></CardContent></Card>
-        <Card><CardHeader><CardTitle className="text-sm">⭐ Posesión</CardTitle></CardHeader><CardContent><TopEquiposTable data={stats.posesion || []} field="posesion_promedio" label="%" colorClass="text-blue-600" /></CardContent></Card>
+        <Card><CardHeader><CardTitle className="text-sm">⏱️ Distancia</CardTitle></CardHeader><CardContent><TopEquiposTable data={stats.distancia_recorrida || []} field="distancia_recorrida" label="Kms" colorClass="text-success" /></CardContent></Card>
+        <Card><CardHeader><CardTitle className="text-sm">📊 Pases</CardTitle></CardHeader><CardContent><TopEquiposTable data={stats.pases || []} field="pases" label="Pases" colorClass="text-primary" /></CardContent></Card>
+        <Card><CardHeader><CardTitle className="text-sm">⭐ Posesión</CardTitle></CardHeader><CardContent><TopEquiposTable data={stats.posesion || []} field="posesion_promedio" label="%" colorClass="text-primary" /></CardContent></Card>
       </div>
     </div>
 
     <div>
-      <h3 className="text-xl font-semibold mb-4 text-yellow-700">🟨 TARJETAS</h3>
+      <h3 className="text-xl font-semibold mb-4 text-warning">🟨 TARJETAS</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card><CardHeader><CardTitle className="text-sm">⚠️ Amarillas</CardTitle></CardHeader><CardContent><TopEquiposTable data={stats.tarjetas_amarillas || []} field="tarjetas_amarillas" label="TA" colorClass="text-yellow-600" /></CardContent></Card>
-        <Card><CardHeader><CardTitle className="text-sm">🟥 Rojas</CardTitle></CardHeader><CardContent><TopEquiposTable data={stats.tarjetas_rojas || []} field="tarjetas_rojas" label="TR" colorClass="text-red-600" /></CardContent></Card>
+        <Card><CardHeader><CardTitle className="text-sm">⚠️ Amarillas</CardTitle></CardHeader><CardContent><TopEquiposTable data={stats.tarjetas_amarillas || []} field="tarjetas_amarillas" label="TA" colorClass="text-warning" /></CardContent></Card>
+        <Card><CardHeader><CardTitle className="text-sm">🟥 Rojas</CardTitle></CardHeader><CardContent><TopEquiposTable data={stats.tarjetas_rojas || []} field="tarjetas_rojas" label="TR" colorClass="text-destructive" /></CardContent></Card>
       </div>
     </div>
 
     <div>
-      <h3 className="text-xl font-semibold mb-4 text-green-700">⚽ PENALTIES</h3>
+      <h3 className="text-xl font-semibold mb-4 text-success">⚽ PENALTIES</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card><CardHeader><CardTitle className="text-sm">✅ A Favor</CardTitle></CardHeader><CardContent><TopEquiposTable data={stats.penalties_equipo || []} field="penalties_equipo" label="Pen" colorClass="text-green-600" /></CardContent></Card>
-        <Card><CardHeader><CardTitle className="text-sm">🚫 En Contra</CardTitle></CardHeader><CardContent><TopEquiposTable data={stats.penalties_rival || []} field="penalties_rival" label="Pen" colorClass="text-red-600" /></CardContent></Card>
+        <Card><CardHeader><CardTitle className="text-sm">✅ A Favor</CardTitle></CardHeader><CardContent><TopEquiposTable data={stats.penalties_equipo || []} field="penalties_equipo" label="Pen" colorClass="text-success" /></CardContent></Card>
+        <Card><CardHeader><CardTitle className="text-sm">🚫 En Contra</CardTitle></CardHeader><CardContent><TopEquiposTable data={stats.penalties_rival || []} field="penalties_rival" label="Pen" colorClass="text-destructive" /></CardContent></Card>
       </div>
     </div>
   </div>
@@ -292,11 +292,11 @@ const OrdenJuegoTab: React.FC<{
               <TableRow key={dr.id}>
                 <TableCell className="text-center font-bold">{dr.orden}</TableCell>
                 <TableCell>
-                  <span className={info ? "" : "text-orange-400"}>{dr.equipo.nombre}</span>
-                  {info && <span className="ml-1 text-xs text-gray-500">({info.media_alineacion ?? "—"}/{info.media_plantilla ?? "—"})</span>}
+                  <span className={info ? "" : "text-warning"}>{dr.equipo.nombre}</span>
+                  {info && <span className="ml-1 text-xs text-muted-foreground">({info.media_alineacion ?? "—"}/{info.media_plantilla ?? "—"})</span>}
                 </TableCell>
                 <TableCell className="text-center">
-                  <button onClick={() => removeEquipo(dr.id)} className="text-red-400 hover:text-red-600">×</button>
+                  <button onClick={() => removeEquipo(dr.id)} className="text-destructive hover:text-destructive/80">×</button>
                 </TableCell>
               </TableRow>
             );
@@ -313,13 +313,13 @@ const OrdenJuegoTab: React.FC<{
             onRemove={id => setPendientes(p => p.filter(e => e.id !== id))}
           />
           {pendientes.length > 0 && (
-            <Button size="sm" onClick={confirmarAdd} className="bg-blue-600 hover:bg-blue-700 text-white self-start">
+            <Button size="sm" onClick={confirmarAdd} className="self-start">
               Añadir {pendientes.length}
             </Button>
           )}
         </div>
       )}
-      {total >= 18 && <p className="text-xs text-gray-500 text-center">División completa (18/18)</p>}
+      {total >= 18 && <p className="text-xs text-muted-foreground text-center">División completa (18/18)</p>}
     </div>
   );
 };
@@ -402,55 +402,55 @@ const EstadisticasJugadoresTab: React.FC<{ jugadoresData: JugadoresData | null; 
   return (
     <div className="space-y-8">
       <div>
-        <h3 className="text-xl font-semibold mb-4 text-green-600">⚽ OFENSIVA</h3>
+        <h3 className="text-xl font-semibold mb-4 text-success">⚽ OFENSIVA</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Card><CardHeader><CardTitle className="text-sm">🔥 Top 10 Goleadores</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topGoleadores} field="goles" label="Goles" colorClass="text-green-600" /></CardContent></Card>
-          <Card><CardHeader><CardTitle className="text-sm">👁️ Asistentes</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topAsistentes} field="asistencias" label="ASI" colorClass="text-blue-600" /></CardContent></Card>
-          <Card><CardHeader><CardTitle className="text-sm">🎯 Tiros al Palo</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topTirosAlPalo} field="tiros_al_palo" label="Palo" colorClass="text-amber-700" /></CardContent></Card>
+          <Card><CardHeader><CardTitle className="text-sm">🔥 Top 10 Goleadores</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topGoleadores} field="goles" label="Goles" colorClass="text-success" /></CardContent></Card>
+          <Card><CardHeader><CardTitle className="text-sm">👁️ Asistentes</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topAsistentes} field="asistencias" label="ASI" colorClass="text-primary" /></CardContent></Card>
+          <Card><CardHeader><CardTitle className="text-sm">🎯 Tiros al Palo</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topTirosAlPalo} field="tiros_al_palo" label="Palo" colorClass="text-warning" /></CardContent></Card>
         </div>
       </div>
 
       <div>
-        <h3 className="text-xl font-semibold mb-4 text-purple-600">🎮 JUEGO</h3>
+        <h3 className="text-xl font-semibold mb-4 text-primary">🎮 JUEGO</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Card><CardHeader><CardTitle className="text-sm">📊 Pasadores</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topPasadores} field="pases_exitosos" label="Pases" colorClass="text-purple-600" /></CardContent></Card>
-          <Card><CardHeader><CardTitle className="text-sm">💨 Regates</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topRegates} field="regates_exitosos" label="Regates" colorClass="text-cyan-600" /></CardContent></Card>
-          <Card><CardHeader><CardTitle className="text-sm">⏱️ Más Minutos</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topMinutos} field="minutos_jugados" label="Min" colorClass="text-indigo-600" /></CardContent></Card>
+          <Card><CardHeader><CardTitle className="text-sm">📊 Pasadores</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topPasadores} field="pases_exitosos" label="Pases" colorClass="text-primary" /></CardContent></Card>
+          <Card><CardHeader><CardTitle className="text-sm">💨 Regates</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topRegates} field="regates_exitosos" label="Regates" colorClass="text-primary" /></CardContent></Card>
+          <Card><CardHeader><CardTitle className="text-sm">⏱️ Más Minutos</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topMinutos} field="minutos_jugados" label="Min" colorClass="text-primary" /></CardContent></Card>
         </div>
       </div>
 
       <div>
-        <h3 className="text-xl font-semibold mb-4 text-blue-600">🛡️ DEFENSA</h3>
+        <h3 className="text-xl font-semibold mb-4 text-primary">🛡️ DEFENSA</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Card><CardHeader><CardTitle className="text-sm">🟩 Recuperaciones</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topRecuperaciones} field="posesion_ganada" label="Rec" colorClass="text-green-700" /></CardContent></Card>
-          <Card><CardHeader><CardTitle className="text-sm">🟥 Pérdidas</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topPerdidas} field="posesion_perdida" label="Pérdidas" colorClass="text-red-700" /></CardContent></Card>
-          <Card><CardHeader><CardTitle className="text-sm">🟨 Fueras de Juego</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topFuerasJuego} field="fueras_de_juego" label="FJ" colorClass="text-yellow-600" /></CardContent></Card>
+          <Card><CardHeader><CardTitle className="text-sm">🟩 Recuperaciones</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topRecuperaciones} field="posesion_ganada" label="Rec" colorClass="text-success" /></CardContent></Card>
+          <Card><CardHeader><CardTitle className="text-sm">🟥 Pérdidas</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topPerdidas} field="posesion_perdida" label="Pérdidas" colorClass="text-destructive" /></CardContent></Card>
+          <Card><CardHeader><CardTitle className="text-sm">🟨 Fueras de Juego</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topFuerasJuego} field="fueras_de_juego" label="FJ" colorClass="text-warning" /></CardContent></Card>
         </div>
       </div>
 
       <div>
-        <h3 className="text-xl font-semibold mb-4 text-yellow-700">🟨 DISCIPLINA</h3>
+        <h3 className="text-xl font-semibold mb-4 text-warning">🟨 DISCIPLINA</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Card><CardHeader><CardTitle className="text-sm">⚠️ Amarillas</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topAmarillas} field="tarjetas_amarillas" label="Amarillas" colorClass="text-yellow-600" /></CardContent></Card>
-          <Card><CardHeader><CardTitle className="text-sm">🟥 Rojas</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topRojas} field="tarjetas_rojas" label="Rojas" colorClass="text-red-600" /></CardContent></Card>
-          <Card><CardHeader><CardTitle className="text-sm">📝 Amonestaciones</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topAmonestados} field="puntuacion_amonestaciones" label="Am." colorClass="text-orange-600" /></CardContent></Card>
+          <Card><CardHeader><CardTitle className="text-sm">⚠️ Amarillas</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topAmarillas} field="tarjetas_amarillas" label="Amarillas" colorClass="text-warning" /></CardContent></Card>
+          <Card><CardHeader><CardTitle className="text-sm">🟥 Rojas</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topRojas} field="tarjetas_rojas" label="Rojas" colorClass="text-destructive" /></CardContent></Card>
+          <Card><CardHeader><CardTitle className="text-sm">📝 Amonestaciones</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topAmonestados} field="puntuacion_amonestaciones" label="Am." colorClass="text-warning" /></CardContent></Card>
         </div>
       </div>
 
       <div>
-        <h3 className="text-xl font-semibold mb-4 text-purple-700">💪 FÍSICO</h3>
+        <h3 className="text-xl font-semibold mb-4 text-primary">💪 FÍSICO</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Card><CardHeader><CardTitle className="text-sm">⏰ Distancia</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topKilometros} field="distancia_recorrida" label="Km" colorClass="text-green-600" /></CardContent></Card>
-          <Card><CardHeader><CardTitle className="text-sm">⭐ Rendimiento</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topRendimiento} field="rendimiento_promedio" label="Rend" colorClass="text-blue-600" /></CardContent></Card>
-          <Card><CardHeader><CardTitle className="text-sm">🏆 MVP</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topMVP} field="jugador_del_partido" label="MVP" colorClass="text-amber-600" /></CardContent></Card>
+          <Card><CardHeader><CardTitle className="text-sm">⏰ Distancia</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topKilometros} field="distancia_recorrida" label="Km" colorClass="text-success" /></CardContent></Card>
+          <Card><CardHeader><CardTitle className="text-sm">⭐ Rendimiento</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topRendimiento} field="rendimiento_promedio" label="Rend" colorClass="text-primary" /></CardContent></Card>
+          <Card><CardHeader><CardTitle className="text-sm">🏆 MVP</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topMVP} field="jugador_del_partido" label="MVP" colorClass="text-warning" /></CardContent></Card>
         </div>
       </div>
 
       <div>
-        <h3 className="text-xl font-semibold mb-4 text-green-600">⚽ PENALTIES</h3>
+        <h3 className="text-xl font-semibold mb-4 text-success">⚽ PENALTIES</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Card><CardHeader><CardTitle className="text-sm">⚡ Provocados</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topPenaltiesProvocados} field="penalties_provocados" label="Prov" colorClass="text-green-600" /></CardContent></Card>
-          <Card><CardHeader><CardTitle className="text-sm">🧤 Porteros Parados</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topPenaltiesParados} field="penalties_parados" label="Parados" colorClass="text-blue-600" /></CardContent></Card>
+          <Card><CardHeader><CardTitle className="text-sm">⚡ Provocados</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topPenaltiesProvocados} field="penalties_provocados" label="Prov" colorClass="text-success" /></CardContent></Card>
+          <Card><CardHeader><CardTitle className="text-sm">🧤 Porteros Parados</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresData.topPenaltiesParados} field="penalties_parados" label="Parados" colorClass="text-primary" /></CardContent></Card>
         </div>
       </div>
     </div>
@@ -490,9 +490,9 @@ const DivisionContent: React.FC<{
     <div className="flex flex-col gap-4">
       {/* Resumen */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Card><CardHeader className="pb-2"><CardTitle className="text-xs font-medium text-muted-foreground">Equipos</CardTitle></CardHeader><CardContent><div className="flex items-center gap-2"><Users className="h-4 w-4 text-blue-500" /><span className="text-xl font-bold">{totalEquipos}</span></div></CardContent></Card>
+        <Card><CardHeader className="pb-2"><CardTitle className="text-xs font-medium text-muted-foreground">Equipos</CardTitle></CardHeader><CardContent><div className="flex items-center gap-2"><Users className="h-4 w-4 text-primary" /><span className="text-xl font-bold">{totalEquipos}</span></div></CardContent></Card>
         <Card><CardHeader className="pb-2"><CardTitle className="text-xs font-medium text-muted-foreground">Partidos</CardTitle></CardHeader><CardContent><div className="text-xl font-bold">{totalPartidos}</div></CardContent></Card>
-        <Card><CardHeader className="pb-2"><CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1"><TrendingUp className="h-3 w-3 text-green-500" />Goles</CardTitle></CardHeader><CardContent><div className="text-xl font-bold text-green-600">{totalGoles}</div></CardContent></Card>
+        <Card><CardHeader className="pb-2"><CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1"><TrendingUp className="h-3 w-3 text-success" />Goles</CardTitle></CardHeader><CardContent><div className="text-xl font-bold text-success">{totalGoles}</div></CardContent></Card>
         <Card><CardHeader className="pb-2"><CardTitle className="text-xs font-medium text-muted-foreground">Goles/Partido</CardTitle></CardHeader><CardContent><div className="text-xl font-bold">{(totalGoles / Math.max(totalPartidos, 1)).toFixed(2)}</div></CardContent></Card>
       </div>
 
@@ -538,11 +538,11 @@ const Show: React.FC<Props> = ({ squadBattle, equipos, plantillasMap, divisiones
         <div className="flex justify-between items-start">
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Trophy className="h-6 w-6 text-yellow-500" />
+              <Trophy className="h-6 w-6 text-warning" />
               {squadBattle.nombre}
             </h1>
             {squadBattle.temporada && (
-              <p className="text-gray-400 text-sm mt-1">Temporada: {squadBattle.temporada.nombre}</p>
+              <p className="text-muted-foreground text-sm mt-1">Temporada: {squadBattle.temporada.nombre}</p>
             )}
           </div>
           <div className="flex gap-2">
@@ -552,7 +552,7 @@ const Show: React.FC<Props> = ({ squadBattle, equipos, plantillasMap, divisiones
         </div>
 
         {squadBattle.divisiones.length === 0 ? (
-          <p className="text-gray-500 text-center py-12">No hay divisiones. Añade una para empezar.</p>
+          <p className="text-muted-foreground text-center py-12">No hay divisiones. Añade una para empezar.</p>
         ) : (
           <Tabs defaultValue={String(squadBattle.divisiones[0]?.id)} className="w-full">
             <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${Math.min(squadBattle.divisiones.length, 6)}, minmax(0, 1fr))` }}>

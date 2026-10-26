@@ -121,15 +121,15 @@ const Index: React.FC<Props> = ({
     currentPage * itemsPerPage
   );
 const getDifficultyClass = (valoracion: number) => {
-if (valoracion >= 95) return "bg-red-600 text-center font-bold w-auto";
-if (valoracion >= 90) return "bg-red-500 text-center font-bold w-auto";
-if (valoracion >= 85) return "bg-orange-500 text-center font-bold w-auto";
-if (valoracion >= 80) return "bg-orange-400 text-center font-bold w-auto";
-if (valoracion >= 75) return "bg-yellow-400 text-center font-bold w-auto";
-if (valoracion >= 70) return "bg-yellow-300 text-center font-bold w-auto";
-if (valoracion >= 65) return "bg-green-400 text-center font-bold w-auto";
-if (valoracion >= 60) return "bg-green-300 text-center font-bold w-auto";
-return "bg-green-200";
+if (valoracion >= 95) return "bg-destructive text-center font-bold w-auto";
+if (valoracion >= 90) return "bg-destructive/80 text-center font-bold w-auto";
+if (valoracion >= 85) return "bg-destructive/60 text-center font-bold w-auto";
+if (valoracion >= 80) return "bg-warning text-center font-bold w-auto";
+if (valoracion >= 75) return "bg-warning/80 text-center font-bold w-auto";
+if (valoracion >= 70) return "bg-warning/60 text-center font-bold w-auto";
+if (valoracion >= 65) return "bg-success/80 text-center font-bold w-auto";
+if (valoracion >= 60) return "bg-success/60 text-center font-bold w-auto";
+return "bg-success/40";
 };
   return (
     <AppLayout breadcrumbs={[{ title: "Temporadas", href: "/temporadas" }]}>
@@ -248,7 +248,7 @@ return "bg-green-200";
                 <>
                   <Table className="w-full">
                     <TableHeader>
-                      <TableRow className="bg-gray-200">
+                      <TableRow>
                         <TableHead className="p-2 border text-center">Jornada</TableHead>
                         <TableHead className="p-2 border text-right">Local</TableHead>
                         <TableHead className="p-2 border text-center">Goles</TableHead>
@@ -312,7 +312,7 @@ return "bg-green-200";
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableCell>Pos</TableCell>
+                    <TableHead>Pos</TableHead>
                     <TableHead>Jugador</TableHead>
                     <TableHead>Equipo</TableHead>
                     <TableHead>MVP</TableHead>
@@ -341,7 +341,7 @@ return "bg-green-200";
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableCell>Pos</TableCell>
+                    <TableHead>Pos</TableHead>
                     <TableHead>Jugador</TableHead>
                     <TableHead>Equipo</TableHead>
                     <TableHead>Rendimiento</TableHead>
@@ -370,7 +370,7 @@ return "bg-green-200";
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableCell>Pos</TableCell>
+                    <TableHead>Pos</TableHead>
                     <TableHead>Jugador</TableHead>
                     <TableHead>Equipo</TableHead>
                     <TableHead>Goles</TableHead>
@@ -399,7 +399,7 @@ return "bg-green-200";
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableCell>Pos</TableCell>
+                    <TableHead>Pos</TableHead>
                     <TableHead>Jugador</TableHead>
                     <TableHead>Equipo</TableHead>
                     <TableHead>Asistencias</TableHead>
@@ -428,7 +428,7 @@ return "bg-green-200";
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableCell>Pos</TableCell>
+                    <TableHead>Pos</TableHead>
                     <TableHead>Jugador</TableHead>
                     <TableHead>Equipo</TableHead>
                     <TableHead>Distancia</TableHead>
@@ -457,7 +457,7 @@ return "bg-green-200";
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableCell>Pos</TableCell>
+                    <TableHead>Pos</TableHead>
                     <TableHead>Jugador</TableHead>
                     <TableHead>Equipo</TableHead>
                     <TableHead>Disparos</TableHead>
@@ -486,7 +486,7 @@ return "bg-green-200";
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableCell>Pos</TableCell>
+                    <TableHead>Pos</TableHead>
                     <TableHead>Jugador</TableHead>
                     <TableHead>Equipo</TableHead>
                     <TableHead>Recuperaciones</TableHead>
@@ -515,7 +515,7 @@ return "bg-green-200";
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableCell>Pos</TableCell>
+                    <TableHead>Pos</TableHead>
                     <TableHead>Jugador</TableHead>
                     <TableHead>Equipo</TableHead>
                     <TableHead>Perdidas</TableHead>
@@ -544,7 +544,7 @@ return "bg-green-200";
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableCell>Pos</TableCell>
+                    <TableHead>Pos</TableHead>
                     <TableHead>Jugador</TableHead>
                     <TableHead>Equipo</TableHead>
                     <TableHead>Regates</TableHead>
@@ -573,7 +573,7 @@ return "bg-green-200";
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableCell>Pos</TableCell>
+                    <TableHead>Pos</TableHead>
                     <TableHead>Jugador</TableHead>
                     <TableHead>Equipo</TableHead>
                     <TableHead>Regates</TableHead>
@@ -602,7 +602,7 @@ return "bg-green-200";
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableCell>Pos</TableCell>
+                    <TableHead>Pos</TableHead>
                     <TableHead>Jugador</TableHead>
                     <TableHead>Equipo</TableHead>
                     <TableHead>Pases</TableHead>
@@ -631,7 +631,7 @@ return "bg-green-200";
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableCell>Pos</TableCell>
+                    <TableHead>Pos</TableHead>
                     <TableHead>Jugador</TableHead>
                     <TableHead>Equipo</TableHead>
                     <TableHead>Pases</TableHead>
@@ -660,7 +660,7 @@ return "bg-green-200";
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableCell>Pos</TableCell>
+                    <TableHead>Pos</TableHead>
                     <TableHead>Jugador</TableHead>
                     <TableHead>Equipo</TableHead>
                     <TableHead>Entradas</TableHead>
@@ -689,7 +689,7 @@ return "bg-green-200";
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableCell>Pos</TableCell>
+                    <TableHead>Pos</TableHead>
                     <TableHead>Jugador</TableHead>
                     <TableHead>Equipo</TableHead>
                     <TableHead>Entradas</TableHead>
@@ -718,7 +718,7 @@ return "bg-green-200";
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableCell>Pos</TableCell>
+                    <TableHead>Pos</TableHead>
                     <TableHead>Jugador</TableHead>
                     <TableHead>Equipo</TableHead>
                     <TableHead>TA</TableHead>
@@ -747,7 +747,7 @@ return "bg-green-200";
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableCell>Pos</TableCell>
+                    <TableHead>Pos</TableHead>
                     <TableHead>Jugador</TableHead>
                     <TableHead>Equipo</TableHead>
                     <TableHead>Rojas</TableHead>

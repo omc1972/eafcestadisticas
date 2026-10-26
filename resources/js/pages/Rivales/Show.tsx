@@ -94,9 +94,9 @@ const EquipoTagSelector: React.FC<{
       {selected.length > 0 && (
         <div className="flex flex-wrap gap-1">
           {selected.map(eq => (
-            <span key={eq.id} className="flex items-center gap-1 bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
+            <span key={eq.id} className="flex items-center gap-1 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full">
               {eq.nombre}
-              <button type="button" onClick={() => onRemove(eq.id)} className="hover:text-red-200">×</button>
+              <button type="button" onClick={() => onRemove(eq.id)} className="hover:opacity-70">×</button>
             </span>
           ))}
         </div>
@@ -156,22 +156,22 @@ const ClasificacionTable: React.FC<{
           const info = plantillasMap[equipo.id];
           return (
             <TableRow key={equipo.id}>
-              <TableCell className="p-1 text-center text-gray-400">{i + 1}</TableCell>
+              <TableCell className="p-1 text-center text-muted-foreground">{i + 1}</TableCell>
               <TableCell className="p-1">
-                <span className={info ? "" : "text-orange-400"}>{equipo.nombre}</span>
+                <span className={info ? "" : "text-warning"}>{equipo.nombre}</span>
                 {info && (
-                  <span className="ml-1 text-gray-500">
+                  <span className="ml-1 text-muted-foreground">
                     ({info.media_alineacion ?? "—"}/{info.media_plantilla ?? "—"})
                   </span>
                 )}
               </TableCell>
               <TableCell className="p-1 text-center">{s.pj}</TableCell>
-              <TableCell className="p-1 text-center text-green-400">{s.pg}</TableCell>
-              <TableCell className="p-1 text-center text-gray-400">{s.pe}</TableCell>
-              <TableCell className="p-1 text-center text-red-400">{s.pp}</TableCell>
+              <TableCell className="p-1 text-center text-success">{s.pg}</TableCell>
+              <TableCell className="p-1 text-center text-muted-foreground">{s.pe}</TableCell>
+              <TableCell className="p-1 text-center text-destructive">{s.pp}</TableCell>
               <TableCell className="p-1 text-center">{s.gf}</TableCell>
               <TableCell className="p-1 text-center">{s.gc}</TableCell>
-              <TableCell className={`p-1 text-center ${s.dif > 0 ? "text-green-400" : s.dif < 0 ? "text-red-400" : ""}`}>
+              <TableCell className={`p-1 text-center ${s.dif > 0 ? "text-success" : s.dif < 0 ? "text-destructive" : ""}`}>
                 {s.dif > 0 ? `+${s.dif}` : s.dif}
               </TableCell>
               <TableCell className="p-1 text-center font-bold">{s.pts}</TableCell>
@@ -226,9 +226,9 @@ const DivisionCard: React.FC<{
       {/* Header */}
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-bold">
-          <span className="text-gray-400 text-sm mr-2">#{division.orden}</span>
+          <span className="text-muted-foreground text-sm mr-2">#{division.orden}</span>
           {division.nombre}
-          <span className="ml-3 text-sm font-normal text-gray-400">{total}/18</span>
+          <span className="ml-3 text-sm font-normal text-muted-foreground">{total}/18</span>
         </h2>
         <div className="flex gap-2">
           {total > 1 && (
@@ -243,7 +243,7 @@ const DivisionCard: React.FC<{
 
         {/* Izquierda: orden de juego */}
         <div className="flex flex-col gap-2">
-          <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide">Orden de juego</p>
+          <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">Orden de juego</p>
           {total > 0 ? (
             <Table className="text-sm w-full">
               <TableHeader>
@@ -260,15 +260,15 @@ const DivisionCard: React.FC<{
                     <TableRow key={dr.id}>
                       <TableCell className="p-1 text-center font-mono font-bold">{dr.orden}</TableCell>
                       <TableCell className="p-1">
-                        <span className={info ? "" : "text-orange-400"}>{dr.equipo.nombre}</span>
+                        <span className={info ? "" : "text-warning"}>{dr.equipo.nombre}</span>
                         {info && (
-                          <span className="ml-1 text-xs text-gray-500">
+                          <span className="ml-1 text-xs text-muted-foreground">
                             ({info.media_alineacion ?? "—"}/{info.media_plantilla ?? "—"})
                           </span>
                         )}
                       </TableCell>
                       <TableCell className="p-1 text-center">
-                        <button onClick={() => removeEquipo(dr.id)} className="text-red-400 hover:text-red-600">×</button>
+                        <button onClick={() => removeEquipo(dr.id)} className="text-destructive hover:text-destructive/70">×</button>
                       </TableCell>
                     </TableRow>
                   );
@@ -276,7 +276,7 @@ const DivisionCard: React.FC<{
               </TableBody>
             </Table>
           ) : (
-            <p className="text-gray-500 text-sm text-center py-3">Sin equipos todavía</p>
+            <p className="text-muted-foreground text-sm text-center py-3">Sin equipos todavía</p>
           )}
 
           {total < 18 && (
@@ -288,18 +288,18 @@ const DivisionCard: React.FC<{
                 onRemove={id => setPendientes(p => p.filter(e => e.id !== id))}
               />
               {pendientes.length > 0 && (
-                <Button size="sm" onClick={confirmarAdd} className="bg-blue-600 hover:bg-blue-700 text-white self-start">
+                <Button size="sm" onClick={confirmarAdd} className="self-start">
                   Añadir {pendientes.length} equipo{pendientes.length > 1 ? "s" : ""}
                 </Button>
               )}
             </div>
           )}
-          {total >= 18 && <p className="text-xs text-gray-500 text-center">División completa (18/18)</p>}
+          {total >= 18 && <p className="text-xs text-muted-foreground text-center">División completa (18/18)</p>}
         </div>
 
         {/* Derecha: clasificación */}
         <div className="flex flex-col gap-2">
-          <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide">Clasificación</p>
+          <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">Clasificación</p>
           {total > 0 ? (
             <ClasificacionTable
               rivales={division.rivales}
@@ -307,7 +307,7 @@ const DivisionCard: React.FC<{
               plantillasMap={plantillasMap}
             />
           ) : (
-            <p className="text-gray-500 text-sm text-center py-3">Sin datos</p>
+            <p className="text-muted-foreground text-sm text-center py-3">Sin datos</p>
           )}
         </div>
 
@@ -337,7 +337,7 @@ const AddDivisionForm: React.FC<{ rivalId: number; nextOrden: number }> = ({ riv
     <form onSubmit={submit} className="flex gap-2 items-end border rounded p-3 self-start">
       <Input value={nombre} onChange={e => setNombre(e.target.value)}
         placeholder="Ej: División 1" className="w-40" required autoFocus />
-      <Button type="submit" className="bg-green-600 hover:bg-green-700 text-white">Crear</Button>
+      <Button type="submit">Crear</Button>
       <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
     </form>
   );
@@ -352,7 +352,7 @@ const Show: React.FC<Props> = ({ rival, equipos, plantillasMap, standingsMap }) 
         <div className="flex justify-between items-start">
           <div>
             <h1 className="text-2xl font-bold">{rival.nombre}</h1>
-            <div className="text-gray-400 text-sm mt-2 space-y-1">
+            <div className="text-muted-foreground text-sm mt-2 space-y-1">
               <p>Código: {rival.codigo}</p>
               <p>Usuario: {rival.usuario}</p>
               <p>Química: {rival.quimica} • Valoración: {rival.valoracion}</p>
@@ -365,7 +365,7 @@ const Show: React.FC<Props> = ({ rival, equipos, plantillasMap, standingsMap }) 
         </div>
 
         {rival.divisiones.length === 0 ? (
-          <p className="text-gray-500 text-center py-12">No hay divisiones. Añade una para empezar.</p>
+          <p className="text-muted-foreground text-center py-12">No hay divisiones. Añade una para empezar.</p>
         ) : (
           <div className="flex flex-col gap-4">
             {rival.divisiones.map(div => (

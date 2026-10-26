@@ -29,10 +29,10 @@ const MEDIOS    = ['MC','MCO','MCD','MD','MI'];
 const DELANTEROS = ['ED','DC','EI'];
 
 function posicionColor(pos: string | null): string {
-    if (pos === 'POR')              return 'text-amber-400';
-    if (DEFENSAS.includes(pos!))    return 'text-blue-400';
-    if (MEDIOS.includes(pos!))      return 'text-green-400';
-    if (DELANTEROS.includes(pos!))  return 'text-red-400';
+    if (pos === 'POR')              return 'text-warning';
+    if (DEFENSAS.includes(pos!))    return 'text-primary';
+    if (MEDIOS.includes(pos!))      return 'text-success';
+    if (DELANTEROS.includes(pos!))  return 'text-destructive';
     return 'text-muted-foreground';
 }
 
@@ -64,11 +64,11 @@ const Index: React.FC<Props> = ({ plantillas }) => {
     const totalPages = Math.ceil(filtered.length / rowsPerPage);
 
     const getMediaColor = (media: number | null) => {
-        if (media === null) return "text-gray-400";
-        if (media >= 85) return "text-yellow-400";
-        if (media >= 75) return "text-green-500";
-        if (media >= 65) return "text-blue-400";
-        return "text-gray-400";
+        if (media === null) return "text-muted-foreground";
+        if (media >= 85) return "text-warning";
+        if (media >= 75) return "text-success";
+        if (media >= 65) return "text-primary";
+        return "text-muted-foreground";
     };
 
     return (
@@ -83,10 +83,7 @@ const Index: React.FC<Props> = ({ plantillas }) => {
                         onChange={(e) => setGlobalFilter(e.target.value)}
                         className="max-w-md"
                     />
-                    <Button
-                        onClick={() => router.get("/plantillas/create")}
-                        className="bg-blue-600 text-white hover:bg-blue-700"
-                    >
+                    <Button onClick={() => router.get("/plantillas/create")}>
                         +
                     </Button>
                 </div>
@@ -97,7 +94,7 @@ const Index: React.FC<Props> = ({ plantillas }) => {
                             {paginated.map((plantilla) => (
                                 <Card
                                     key={plantilla.id}
-                                    className="cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all relative group"
+                                    className="cursor-pointer hover:ring-2 hover:ring-ring transition-all relative group"
                                     onClick={() => router.get(`/plantillas/${plantilla.id}/edit`)}
                                 >
                                     <CardContent className="p-3 flex flex-col items-center gap-2">
@@ -129,7 +126,7 @@ const Index: React.FC<Props> = ({ plantillas }) => {
 
                                         {/* Liga */}
                                         {plantilla.liga && (
-                                            <p className="text-xs text-blue-400 text-center">
+                                            <p className="text-xs text-primary text-center">
                                                 {plantilla.liga.nombre}
                                             </p>
                                         )}
@@ -181,7 +178,7 @@ const Index: React.FC<Props> = ({ plantillas }) => {
 
                                         {/* Entrenador */}
                                         {plantilla.entrenador && (
-                                            <p className="text-xs text-blue-300 text-center mt-1 font-semibold">
+                                            <p className="text-xs text-primary text-center mt-1 font-semibold">
                                                 🎯 {plantilla.entrenador.nombre}
                                             </p>
                                         )}
@@ -211,8 +208,8 @@ const Index: React.FC<Props> = ({ plantillas }) => {
                     </>
                 ) : (
                     <div className="text-center py-8">
-                        <p className="text-gray-500 text-lg">No se encontraron plantillas</p>
-                        <p className="text-gray-400 text-sm">
+                        <p className="text-muted-foreground text-lg">No se encontraron plantillas</p>
+                        <p className="text-muted-foreground text-sm">
                             No hay plantillas registradas en el sistema
                         </p>
                     </div>

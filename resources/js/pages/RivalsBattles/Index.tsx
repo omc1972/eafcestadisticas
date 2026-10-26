@@ -50,10 +50,7 @@ const Index: React.FC<Props> = ({ rivalsBattles }) => {
             onChange={(e) => setFilter(e.target.value)}
             className="max-w-md"
           />
-          <Button
-            onClick={() => router.get("/rivals-battles/create")}
-            className="bg-blue-600 text-white hover:bg-blue-700"
-          >
+          <Button onClick={() => router.get("/rivals-battles/create")}>
             +
           </Button>
         </div>
@@ -61,7 +58,7 @@ const Index: React.FC<Props> = ({ rivalsBattles }) => {
         {filtered.length > 0 ? (
           <Table className="w-full">
             <TableHeader>
-              <TableRow className="bg-gray-200">
+              <TableRow>
                 <TableHead className="p-2 border">ID</TableHead>
                 <TableHead className="p-2 border">Nombre</TableHead>
                 <TableHead className="p-2 border">Temporada</TableHead>
@@ -73,7 +70,7 @@ const Index: React.FC<Props> = ({ rivalsBattles }) => {
               {filtered.map((rb, i) => (
                 <TableRow
                   key={rb.id}
-                  className={`cursor-pointer ${i % 2 === 0 ? "bg-gray-800" : "bg-gray-750"}`}
+                  className={`cursor-pointer ${i % 2 === 0 ? "" : "bg-muted/30"}`}
                   onClick={() => router.get(`/rivals-battles/${rb.id}`)}
                 >
                   <TableCell className="p-2 border">{rb.id}</TableCell>
@@ -84,7 +81,7 @@ const Index: React.FC<Props> = ({ rivalsBattles }) => {
                   <TableCell className="p-2 border">
                     {rb.divisiones.length}
                   </TableCell>
-                  <TableCell onClick={(e) => e.stopPropagation()}>
+                  <TableCell className="p-2 border" onClick={(e) => e.stopPropagation()}>
                     <AccionesTabla id={rb.id} basePath="/rivals-battles" />
                   </TableCell>
                 </TableRow>
@@ -93,8 +90,8 @@ const Index: React.FC<Props> = ({ rivalsBattles }) => {
           </Table>
         ) : (
           <div className="text-center py-8">
-            <p className="text-gray-500 text-lg">No hay Rivals registrados</p>
-            <p className="text-gray-400 text-sm">
+            <p className="text-muted-foreground text-lg">No hay Rivals registrados</p>
+            <p className="text-muted-foreground text-sm">
               Crea uno nuevo con el botón +
             </p>
           </div>

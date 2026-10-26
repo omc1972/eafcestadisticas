@@ -48,7 +48,7 @@ const Create: React.FC<Props> = ({ temporadas }) => {
               placeholder="Ej: Squad Battles Semana 1"
             />
             {errors.nombre && (
-              <p className="text-red-500 text-sm mt-1">{errors.nombre}</p>
+              <p className="text-destructive text-sm mt-1">{errors.nombre}</p>
             )}
           </div>
           <div>
@@ -68,7 +68,7 @@ const Create: React.FC<Props> = ({ temporadas }) => {
             </select>
           </div>
           <div className="flex gap-2 mt-2">
-            <Button type="submit" className="bg-blue-600 text-white hover:bg-blue-700">
+            <Button type="submit">
               Crear
             </Button>
             <Button

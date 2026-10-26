@@ -65,13 +65,13 @@ const Index: React.FC<Props> = ({ entrenadores }) => {
             onChange={(e) => setGlobalFilter(e.target.value)}
             className="max-w-md"
           />
-          <Button onClick={() => router.get("/entrenadores/create")} className="bg-blue-600 text-white hover:bg-blue-700">+</Button>
+          <Button onClick={() => router.get("/entrenadores/create")}>+</Button>
         </div>
         {paginated.length > 0 ? (
           <>
             <Table className="w-full">
               <TableHeader>
-                <TableRow className="bg-gray-200">
+                <TableRow>
                   <TableHead className="p-2 border">ID</TableHead>
                   <TableHead className="p-2 border">Nombre</TableHead>
                   <TableHead className="p-2 border">País</TableHead>
@@ -84,7 +84,7 @@ const Index: React.FC<Props> = ({ entrenadores }) => {
                   <TableRow
                     key={row.id}
                     className={`cursor-pointer ${
-                      i % 2 === 0 ? "bg-gray-800" : "bg-gray-750"
+                      i % 2 === 0 ? "" : "bg-muted/30"
                     }`}
                     onClick={() => router.get(`/entrenadores/${row.id}/edit`)}
                   >
@@ -92,10 +92,10 @@ const Index: React.FC<Props> = ({ entrenadores }) => {
                     <TableCell className="p-2 border">{row.nombre}</TableCell>
                     <TableCell className="p-2 border">{row.pais}</TableCell>
                     <TableCell className="p-2 border">{row.tactica}</TableCell>
-                    <TableCell>
-                        <AccionesTabla 
-                          id={row.id} 
-                          basePath="/entrenadores" 
+                    <TableCell className="p-2 border">
+                        <AccionesTabla
+                          id={row.id}
+                          basePath="/entrenadores"
                         />
                       </TableCell>
                     </TableRow>
@@ -114,11 +114,11 @@ const Index: React.FC<Props> = ({ entrenadores }) => {
           
           ) : (
             <div className="text-center py-8">
-              <i className="pi pi-inbox text-4xl text-gray-400 mb-2"></i>
-              <p className="text-gray-500 text-lg">
+              <i className="pi pi-inbox text-4xl text-muted-foreground mb-2"></i>
+              <p className="text-muted-foreground text-lg">
                 No se encontraron entrenadores
               </p>
-              <p className="text-gray-400 text-sm">
+              <p className="text-muted-foreground text-sm">
                 No hay entrenadores registrados en el sistema
               </p>
             </div>

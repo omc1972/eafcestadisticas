@@ -222,9 +222,9 @@ export default function View({ jugador, resumen }) {
                   {bloque.items.map((item, j) => (
                     <li key={j} className="flex items-center text-sm gap-2">
                       <span className="text-muted-foreground w-40 flex-shrink-0">{item.label}</span>
-                      <div className="flex-1 bg-gray-200 h-2 rounded-full relative">
+                      <div className="flex-1 bg-muted h-2 rounded-full relative">
                         <div
-                          className="bg-green-500 h-2 rounded-full absolute top-0 left-0"
+                          className="bg-primary h-2 rounded-full absolute top-0 left-0"
                           style={{ width: `${item.value}%` }}
                         ></div>
                       </div>

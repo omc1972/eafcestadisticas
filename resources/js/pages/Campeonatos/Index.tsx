@@ -62,13 +62,13 @@ const Index: React.FC<Props> = ({ campeonatos }) => {
             onChange={(e) => setGlobalFilter(e.target.value)}
             className="max-w-md"
           />
-          <Button onClick={() => router.get("/campeonatos/create")} className="bg-blue-600 text-white hover:bg-blue-700">+</Button>
+          <Button onClick={() => router.get("/campeonatos/create")}>+</Button>
         </div>
         {paginated.length > 0 ? (
           <>
             <Table className="w-full">
               <TableHeader>
-                <TableRow className="bg-gray-200">
+                <TableRow>
                   <TableHead className="p-2 border">Nombre</TableHead>
                   <TableHead className="p-2 border">Tipo</TableHead>
                   <TableHead className="p-2 border">Fecha inicio</TableHead>
@@ -81,7 +81,7 @@ const Index: React.FC<Props> = ({ campeonatos }) => {
                 {paginated.map((row, i) => (
                   <TableRow
                     key={row.id}
-                    className={`cursor-pointer ${i % 2 === 0 ? "bg-gray-800" : "bg-gray-750"}`}
+                    className={`cursor-pointer ${i % 2 === 0 ? "" : "bg-muted/30"}`}
                     onClick={() => router.get(`/campeonatos/${row.id}`)}
                   >
                     <TableCell className="p-2 border">{row.nombre}</TableCell>
@@ -102,7 +102,7 @@ const Index: React.FC<Props> = ({ campeonatos }) => {
                         Copa
                       </Button>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="p-2 border">
                       <AccionesTabla id={row.id} basePath="/campeonatos" />
                     </TableCell>
                   </TableRow>
@@ -120,9 +120,9 @@ const Index: React.FC<Props> = ({ campeonatos }) => {
           </>
         ) : (
           <div className="text-center py-8">
-            <i className="pi pi-inbox text-4xl text-gray-400 mb-2"></i>
-            <p className="text-gray-500 text-lg">No se encontraron campeonatos</p>
-            <p className="text-gray-400 text-sm">No hay campeonatos registrados en el sistema</p>
+            <i className="pi pi-inbox text-4xl text-muted-foreground mb-2"></i>
+            <p className="text-muted-foreground text-lg">No se encontraron campeonatos</p>
+            <p className="text-muted-foreground text-sm">No hay campeonatos registrados en el sistema</p>
           </div>
         )}
       </div>

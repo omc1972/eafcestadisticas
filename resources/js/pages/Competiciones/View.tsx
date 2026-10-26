@@ -198,7 +198,7 @@ const View: React.FC<Props> = ({ competicion, resumenPorTemporada = [] }) => {
                     </TableHeader>
                     <TableBody>
                       {equipos.map((eq, idx) => (
-                        <TableRow key={eq.id ?? idx} className={idx === 0 ? 'bg-green-500/10' : ''}>
+                        <TableRow key={eq.id ?? idx} className={idx === 0 ? 'bg-success/10' : ''}>
                           <TableCell className="font-bold">{idx + 1}</TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">
@@ -207,12 +207,12 @@ const View: React.FC<Props> = ({ competicion, resumenPorTemporada = [] }) => {
                             </div>
                           </TableCell>
                           <TableCell className="text-center">{eq.played}</TableCell>
-                          <TableCell className="text-center text-green-600">{eq.wins}</TableCell>
-                          <TableCell className="text-center text-yellow-600">{eq.draws}</TableCell>
-                          <TableCell className="text-center text-red-600">{eq.losses}</TableCell>
+                          <TableCell className="text-center text-success">{eq.wins}</TableCell>
+                          <TableCell className="text-center text-warning">{eq.draws}</TableCell>
+                          <TableCell className="text-center text-destructive">{eq.losses}</TableCell>
                           <TableCell className="text-center">{eq.gf}</TableCell>
                           <TableCell className="text-center">{eq.ga}</TableCell>
-                          <TableCell className={`text-center font-medium ${((eq.gf - eq.ga) > 0) ? 'text-green-600' : (eq.gf - eq.ga) < 0 ? 'text-red-600' : ''}`}>
+                          <TableCell className={`text-center font-medium ${((eq.gf - eq.ga) > 0) ? 'text-success' : (eq.gf - eq.ga) < 0 ? 'text-destructive' : ''}`}>
                             {(eq.gf - eq.ga) > 0 ? '+' : ''}{eq.gf - eq.ga}
                           </TableCell>
                           <TableCell className="text-center font-bold">{eq.puntos}</TableCell>
@@ -237,20 +237,20 @@ const View: React.FC<Props> = ({ competicion, resumenPorTemporada = [] }) => {
                       const diff = (p.valor_equipo ?? 0) - (p.valor_rival ?? 0);
                       const isV = (gLocal ?? 0) > (gVis ?? 0);
                       const isE = (gLocal ?? 0) === (gVis ?? 0);
-                      const badgeColor = diff <= -8 ? 'bg-orange-600' : diff <= -3 ? 'bg-orange-400' : diff <= 3 ? 'bg-yellow-400' : diff <= 8 ? 'bg-green-400' : 'bg-emerald-500';
+                      const badgeColor = diff <= -8 ? 'bg-destructive' : diff <= -3 ? 'bg-destructive/70' : diff <= 3 ? 'bg-warning' : diff <= 8 ? 'bg-success/70' : 'bg-success';
                       const badgeIcon = diff <= -8 ? '😰' : diff <= -3 ? '😟' : diff <= 3 ? '😐' : diff <= 8 ? '🙂' : '🏆';
                       return (
                         <div key={p.id} onClick={() => window.location.href = `/partidos/${p.id}`} className="flex items-center gap-1.5 p-1.5 border rounded hover:bg-muted/50 transition-colors text-sm cursor-pointer">
                           <span className="text-[12px]">{esLocal ? '🏠' : '✈️'}</span>
                           <div className="flex-1 flex items-center gap-2 min-w-0">
                             {esLocal ? (
-                              <><span className="font-bold text-blue-700 truncate">{equipoNombre}</span><span className="text-muted-foreground text-[12px]">vs</span><span className="text-gray-400 truncate">{rivalNombre}</span></>
+                              <><span className="font-bold text-primary truncate">{equipoNombre}</span><span className="text-muted-foreground text-[12px]">vs</span><span className="text-muted-foreground truncate">{rivalNombre}</span></>
                             ) : (
-                              <><span className="text-gray-400 truncate">{rivalNombre}</span><span className="text-muted-foreground text-[12px]">vs</span><span className="font-bold text-blue-700 truncate">{equipoNombre}</span></>
+                              <><span className="text-muted-foreground truncate">{rivalNombre}</span><span className="text-muted-foreground text-[12px]">vs</span><span className="font-bold text-primary truncate">{equipoNombre}</span></>
                             )}
                           </div>
                           <span className={`px-1 py-0.5 rounded text-[10px] font-medium text-white ${badgeColor}`}>{badgeIcon}</span>
-                          <div className={`font-bold px-2 py-0.5 rounded whitespace-nowrap text-[12px] ${isV ? 'bg-green-500/20 text-green-600' : isE ? 'bg-yellow-500/20 text-yellow-600' : 'bg-red-500/20 text-red-600'}`}>
+                          <div className={`font-bold px-2 py-0.5 rounded whitespace-nowrap text-[12px] ${isV ? 'bg-success/20 text-success' : isE ? 'bg-warning/20 text-warning' : 'bg-destructive/20 text-destructive'}`}>
                             {gLocal ?? '-'}-{gVis ?? '-'}
                           </div>
                         </div>
@@ -281,29 +281,29 @@ const View: React.FC<Props> = ({ competicion, resumenPorTemporada = [] }) => {
           {!loadingEquipos && equiposStatsMap && equiposStatsMap.estadisticas_equipos && (
             <div className="space-y-8">
               <div>
-                <h3 className="text-xl font-semibold mb-4 text-green-700">⚡ ATAQUE</h3>
+                <h3 className="text-xl font-semibold mb-4 text-success">⚡ ATAQUE</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <Card><CardHeader><CardTitle className="flex items-center gap-2"><Target className="h-5 w-5 text-green-600" />Top 5 Goles a Favor</CardTitle></CardHeader><CardContent><TopEquiposTable data={equiposStatsMap.estadisticas_equipos.goles_favor} field="goles_favor" label="GF" colorClass="text-green-600" /></CardContent></Card>
-                  <Card><CardHeader><CardTitle className="flex items-center gap-2">Top 5 Tiros a Puerta Realizados</CardTitle></CardHeader><CardContent><TopEquiposTable data={equiposStatsMap.estadisticas_equipos.tiros_a_puerta_realizados} field="tiros_a_puerta_realizados" label="TPR" colorClass="text-blue-600" /></CardContent></Card>
-                  <Card><CardHeader><CardTitle className="flex items-center gap-2">Top 5 Tiros Totales Realizados</CardTitle></CardHeader><CardContent><TopEquiposTable data={equiposStatsMap.estadisticas_equipos.tiros_realizados} field="tiros_realizados" label="TR" colorClass="text-orange-600" /></CardContent></Card>
-                  <Card><CardHeader><CardTitle className="flex items-center gap-2">Menos Tiros Totales</CardTitle></CardHeader><CardContent><TopEquiposTable data={equiposStatsMap.estadisticas_equipos.tiros_realizados_min} field="tiros_realizados" label="TR" colorClass="text-cyan-700" /></CardContent></Card>
+                  <Card><CardHeader><CardTitle className="flex items-center gap-2"><Target className="h-5 w-5 text-success" />Top 5 Goles a Favor</CardTitle></CardHeader><CardContent><TopEquiposTable data={equiposStatsMap.estadisticas_equipos.goles_favor} field="goles_favor" label="GF" colorClass="text-success" /></CardContent></Card>
+                  <Card><CardHeader><CardTitle className="flex items-center gap-2">Top 5 Tiros a Puerta Realizados</CardTitle></CardHeader><CardContent><TopEquiposTable data={equiposStatsMap.estadisticas_equipos.tiros_a_puerta_realizados} field="tiros_a_puerta_realizados" label="TPR" colorClass="text-primary" /></CardContent></Card>
+                  <Card><CardHeader><CardTitle className="flex items-center gap-2">Top 5 Tiros Totales Realizados</CardTitle></CardHeader><CardContent><TopEquiposTable data={equiposStatsMap.estadisticas_equipos.tiros_realizados} field="tiros_realizados" label="TR" colorClass="text-warning" /></CardContent></Card>
+                  <Card><CardHeader><CardTitle className="flex items-center gap-2">Menos Tiros Totales</CardTitle></CardHeader><CardContent><TopEquiposTable data={equiposStatsMap.estadisticas_equipos.tiros_realizados_min} field="tiros_realizados" label="TR" colorClass="text-primary" /></CardContent></Card>
                 </div>
               </div>
 
               <div>
-                <h3 className="text-xl font-semibold mb-4 text-blue-700">🛡️ DEFENSA</h3>
+                <h3 className="text-xl font-semibold mb-4 text-primary">🛡️ DEFENSA</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <Card><CardHeader><CardTitle>Top 5 Balones Ganados</CardTitle></CardHeader><CardContent><TopEquiposTable data={equiposStatsMap.estadisticas_equipos.balones_ganados_equipo} field="balones_ganados_equipo" label="BG" colorClass="text-green-700" /></CardContent></Card>
-                  <Card><CardHeader><CardTitle>Menos Goles en Contra</CardTitle></CardHeader><CardContent><TopEquiposTable data={equiposStatsMap.estadisticas_equipos.goles_contra} field="goles_contra" label="GC" colorClass="text-red-600" /></CardContent></Card>
-                  <Card><CardHeader><CardTitle>Top 5 Intercepciones</CardTitle></CardHeader><CardContent><TopEquiposTable data={equiposStatsMap.estadisticas_equipos.interceciones_equipo} field="interceciones_equipo" label="INT" colorClass="text-blue-700" /></CardContent></Card>
+                  <Card><CardHeader><CardTitle>Top 5 Balones Ganados</CardTitle></CardHeader><CardContent><TopEquiposTable data={equiposStatsMap.estadisticas_equipos.balones_ganados_equipo} field="balones_ganados_equipo" label="BG" colorClass="text-success" /></CardContent></Card>
+                  <Card><CardHeader><CardTitle>Menos Goles en Contra</CardTitle></CardHeader><CardContent><TopEquiposTable data={equiposStatsMap.estadisticas_equipos.goles_contra} field="goles_contra" label="GC" colorClass="text-destructive" /></CardContent></Card>
+                  <Card><CardHeader><CardTitle>Top 5 Intercepciones</CardTitle></CardHeader><CardContent><TopEquiposTable data={equiposStatsMap.estadisticas_equipos.interceciones_equipo} field="interceciones_equipo" label="INT" colorClass="text-primary" /></CardContent></Card>
                 </div>
               </div>
 
               <div>
-                <h3 className="text-xl font-semibold mb-4 text-orange-700">💪 FÍSICO</h3>
+                <h3 className="text-xl font-semibold mb-4 text-warning">💪 FÍSICO</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <Card><CardHeader><CardTitle>Top 5 Distancia Recorrida</CardTitle></CardHeader><CardContent><TopEquiposTable data={equiposStatsMap.estadisticas_equipos.distancia_recorrida} field="distancia_recorrida" label="Kms" colorClass="text-green-600" /></CardContent></Card>
-                  <Card><CardHeader><CardTitle>Top 5 Pases</CardTitle></CardHeader><CardContent><TopEquiposTable data={equiposStatsMap.estadisticas_equipos.pases} field="pases" label="Pases" colorClass="text-purple-600" /></CardContent></Card>
+                  <Card><CardHeader><CardTitle>Top 5 Distancia Recorrida</CardTitle></CardHeader><CardContent><TopEquiposTable data={equiposStatsMap.estadisticas_equipos.distancia_recorrida} field="distancia_recorrida" label="Kms" colorClass="text-success" /></CardContent></Card>
+                  <Card><CardHeader><CardTitle>Top 5 Pases</CardTitle></CardHeader><CardContent><TopEquiposTable data={equiposStatsMap.estadisticas_equipos.pases} field="pases" label="Pases" colorClass="text-primary" /></CardContent></Card>
                 </div>
               </div>
             </div>
@@ -323,28 +323,28 @@ const View: React.FC<Props> = ({ competicion, resumenPorTemporada = [] }) => {
           {!loadingJugadores && jugadoresStatsMap && (
             <div className="space-y-8">
               <div>
-                <h3 className="text-xl font-semibold mb-4 text-green-600">⚽ OFENSIVA</h3>
+                <h3 className="text-xl font-semibold mb-4 text-success">⚽ OFENSIVA</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <Card><CardHeader><CardTitle>Top 10 Goleadores</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresStatsMap.topGoleadores ?? []} field="goles" label="G" colorClass="text-green-600" /></CardContent></Card>
-                  <Card><CardHeader><CardTitle>Top 10 Asistentes</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresStatsMap.topAsistentes ?? []} field="asistencias" label="A" colorClass="text-blue-600" /></CardContent></Card>
-                  <Card><CardHeader><CardTitle>Top 10 Tiros al Palo</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresStatsMap.topTirosAlPalo ?? []} field="tiros_al_palo" label="Palo" colorClass="text-amber-700" /></CardContent></Card>
-                  <Card><CardHeader><CardTitle>Top 10 Penalties Provocados</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresStatsMap.topPenaltiesProvocados ?? []} field="penalties_provocados" label="PP" colorClass="text-blue-600" /></CardContent></Card>
+                  <Card><CardHeader><CardTitle>Top 10 Goleadores</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresStatsMap.topGoleadores ?? []} field="goles" label="G" colorClass="text-success" /></CardContent></Card>
+                  <Card><CardHeader><CardTitle>Top 10 Asistentes</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresStatsMap.topAsistentes ?? []} field="asistencias" label="A" colorClass="text-primary" /></CardContent></Card>
+                  <Card><CardHeader><CardTitle>Top 10 Tiros al Palo</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresStatsMap.topTirosAlPalo ?? []} field="tiros_al_palo" label="Palo" colorClass="text-warning" /></CardContent></Card>
+                  <Card><CardHeader><CardTitle>Top 10 Penalties Provocados</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresStatsMap.topPenaltiesProvocados ?? []} field="penalties_provocados" label="PP" colorClass="text-primary" /></CardContent></Card>
                 </div>
               </div>
 
               <div>
-                <h3 className="text-xl font-semibold mb-4 text-purple-600">🎯 PASES Y POSESIÓN</h3>
+                <h3 className="text-xl font-semibold mb-4 text-primary">🎯 PASES Y POSESIÓN</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <Card><CardHeader><CardTitle>Top 10 Pasadores</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresStatsMap.topPasadores ?? []} field="pases_exitosos" label="P" colorClass="text-purple-600" /></CardContent></Card>
-                  <Card><CardHeader><CardTitle>Top 10 Regates</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresStatsMap.topRegates ?? []} field="regates_exitosos" label="R" colorClass="text-purple-600" /></CardContent></Card>
+                  <Card><CardHeader><CardTitle>Top 10 Pasadores</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresStatsMap.topPasadores ?? []} field="pases_exitosos" label="P" colorClass="text-primary" /></CardContent></Card>
+                  <Card><CardHeader><CardTitle>Top 10 Regates</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresStatsMap.topRegates ?? []} field="regates_exitosos" label="R" colorClass="text-primary" /></CardContent></Card>
                 </div>
               </div>
 
               <div>
-                <h3 className="text-xl font-semibold mb-4 text-yellow-600">🏆 RENDIMIENTO</h3>
+                <h3 className="text-xl font-semibold mb-4 text-warning">🏆 RENDIMIENTO</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <Card><CardHeader><CardTitle>Top 10 Rendimiento</CardTitle></CardHeader><CardContent><TopJugadoresTable data={(jugadoresStatsMap.topRendimiento ?? []).map((j: any) => ({...j, rendimiento_promedio: j.rendimiento_promedio}))} field="rendimiento_promedio" label="Prom" colorClass="text-yellow-600" format={(v: any) => v ? Number(v).toFixed(1) : '0'} /></CardContent></Card>
-                  <Card><CardHeader><CardTitle>Top 10 Minutos</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresStatsMap.topMinutos ?? []} field="minutos_jugados" label="M" colorClass="text-orange-600" /></CardContent></Card>
+                  <Card><CardHeader><CardTitle>Top 10 Rendimiento</CardTitle></CardHeader><CardContent><TopJugadoresTable data={(jugadoresStatsMap.topRendimiento ?? []).map((j: any) => ({...j, rendimiento_promedio: j.rendimiento_promedio}))} field="rendimiento_promedio" label="Prom" colorClass="text-warning" format={(v: any) => v ? Number(v).toFixed(1) : '0'} /></CardContent></Card>
+                  <Card><CardHeader><CardTitle>Top 10 Minutos</CardTitle></CardHeader><CardContent><TopJugadoresTable data={jugadoresStatsMap.topMinutos ?? []} field="minutos_jugados" label="M" colorClass="text-warning" /></CardContent></Card>
                 </div>
               </div>
             </div>
@@ -365,11 +365,11 @@ const View: React.FC<Props> = ({ competicion, resumenPorTemporada = [] }) => {
         </div>
 
         {resumenPorTemporada.length === 0 ? (
-          <p className="text-gray-500">No hay temporadas registradas.</p>
+          <p className="text-muted-foreground">No hay temporadas registradas.</p>
         ) : temporadaSeleccionada ? (
           (() => {
             const t = resumenPorTemporada.find(r => r.temporada_id === temporadaSeleccionada);
-            if (!t) return <p className="text-gray-500">Temporada no encontrada.</p>;
+            if (!t) return <p className="text-muted-foreground">Temporada no encontrada.</p>;
             return renderClasificacionYPartidos(t);
           })()
         ) : (

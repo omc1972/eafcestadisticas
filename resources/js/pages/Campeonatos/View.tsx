@@ -26,10 +26,10 @@ const View: React.FC<Props> = ({ campeonato }) => {
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={campeonato?.nombre ?? "Campeonato"} />
-      <div className="max-w-3xl mx-auto p-6 bg-white rounded shadow">
+      <div className="max-w-3xl mx-auto p-6 bg-card rounded shadow">
         <h1 className="text-2xl font-bold mb-2">{campeonato?.nombre}</h1>
-        {campeonato?.tipo && <div className="text-sm text-gray-600 mb-2">Tipo: {campeonato.tipo}</div>}
-        <div className="text-sm text-gray-600 mb-4">
+        {campeonato?.tipo && <div className="text-sm text-muted-foreground mb-2">Tipo: {campeonato.tipo}</div>}
+        <div className="text-sm text-muted-foreground mb-4">
           {campeonato?.fecha_inicio && <span>Inicio: {campeonato.fecha_inicio}</span>}
           {campeonato?.fecha_fin && <span className="ml-4">Fin: {campeonato.fecha_fin}</span>}
         </div>

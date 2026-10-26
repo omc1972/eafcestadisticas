@@ -9,7 +9,7 @@ const Layout: React.FC<Props> = ({ children }) => {
     return (
         <div className="min-h-screen flex flex-col">
             {/* Header */}
-            <header className="bg-blue-600 text-white p-4 shadow">
+            <header className="bg-primary text-primary-foreground p-4 shadow">
                 <div className="container mx-auto flex justify-between items-center">
                     <h1 className="text-xl font-bold">Mi App</h1>
                     <nav>
@@ -25,7 +25,7 @@ const Layout: React.FC<Props> = ({ children }) => {
             </main>
 
             {/* Footer */}
-            <footer className="bg-gray-100 text-center p-4 text-sm text-gray-600 border-t">
+            <footer className="bg-muted text-center p-4 text-sm text-muted-foreground border-t">
                 © {new Date().getFullYear()} Mi App. Todos los derechos reservados.
             </footer>
         </div>

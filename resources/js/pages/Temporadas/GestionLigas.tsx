@@ -173,22 +173,22 @@ export default function GestionLigas({ temporada, ligas: ligasIniciales, competi
 
     const getMediaColorClass = (media: number | null) => {
         if (media === null) {
-            return 'border-slate-300 bg-slate-50 text-slate-500';
+            return 'border-border bg-muted text-muted-foreground';
         }
 
         if (media >= 85) {
-            return 'border-emerald-300 bg-emerald-50 text-emerald-700';
+            return 'border-success/40 bg-success/10 text-success';
         }
 
         if (media >= 80) {
-            return 'border-lime-300 bg-lime-50 text-lime-700';
+            return 'border-success/30 bg-success/5 text-success';
         }
 
         if (media >= 75) {
-            return 'border-amber-300 bg-amber-50 text-amber-700';
+            return 'border-warning/40 bg-warning/10 text-warning';
         }
 
-        return 'border-rose-300 bg-rose-50 text-rose-700';
+        return 'border-destructive/40 bg-destructive/10 text-destructive';
     };
 
     const changeJornada = (ligaId: number, nextIndex: number) => {

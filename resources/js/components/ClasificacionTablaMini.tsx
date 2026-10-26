@@ -48,10 +48,10 @@ export default function ClasificacionTablaMini({ estadisticas, mostrarCodigo }: 
                     {estadisticas.map((stat, index) => (
                         <TableRow
                             key={stat.equipo.id}
-                            className={`hover:bg-muted/50 ${index === 0 ? 'bg-green-500/10' : ''}`}
+                            className={`hover:bg-muted/50 ${index === 0 ? 'bg-success/10' : ''}`}
                         >
                             <TableCell className="font-bold">
-                                {index === 0 && <Trophy className="h-3 w-3 inline text-yellow-500 mr-1" />}
+                                {index === 0 && <Trophy className="h-3 w-3 inline text-warning mr-1" />}
                                 {index + 1}
                             </TableCell>
                             <TableCell>
@@ -72,12 +72,12 @@ export default function ClasificacionTablaMini({ estadisticas, mostrarCodigo }: 
                                 </div>
                             </TableCell>
                             <TableCell className="text-center">{stat.partidos_jugados}</TableCell>
-                            <TableCell className="text-center text-green-600">{stat.victorias}</TableCell>
-                            <TableCell className="text-center text-yellow-600">{stat.empates}</TableCell>
-                            <TableCell className="text-center text-red-600">{stat.derrotas}</TableCell>
+                            <TableCell className="text-center text-success">{stat.victorias}</TableCell>
+                            <TableCell className="text-center text-warning">{stat.empates}</TableCell>
+                            <TableCell className="text-center text-destructive">{stat.derrotas}</TableCell>
                             <TableCell className="text-center">{stat.goles_favor}</TableCell>
                             <TableCell className="text-center">{stat.goles_contra}</TableCell>
-                            <TableCell className={`text-center font-medium ${stat.diferencia_goles > 0 ? 'text-green-600' : stat.diferencia_goles < 0 ? 'text-red-600' : ''}`}>
+                            <TableCell className={`text-center font-medium ${stat.diferencia_goles > 0 ? 'text-success' : stat.diferencia_goles < 0 ? 'text-destructive' : ''}`}>
                                 {stat.diferencia_goles > 0 ? '+' : ''}
                                 {stat.diferencia_goles}
                             </TableCell>
