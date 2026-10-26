@@ -11,10 +11,11 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import { edit as appearanceEdit } from '@/routes/appearance';
 import squadBattles from '@/routes/squad-battles';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid, LayoutList, Users, Trophy, Shirt, Shield, Building, Goal, Swords, UserRound } from 'lucide-react';
+import { LayoutGrid, LayoutList, Users, Trophy, Shirt, Shield, Building, Goal, Swords, UserRound, Settings } from 'lucide-react';
 import AppLogo from './app-logo';
 
 import { route } from 'ziggy-js';
@@ -109,14 +110,9 @@ const mainNavItems: NavItem[] = [
 
 const footerNavItems: NavItem[] = [
     {
-        title: 'Repository',
-        href: 'https://github.com/laravel/react-starter-kit',
-        icon: Folder,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#react',
-        icon: BookOpen,
+        title: 'Apariencia',
+        href: appearanceEdit(),
+        icon: Settings,
     },
 ];
 
