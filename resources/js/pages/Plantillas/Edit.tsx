@@ -54,7 +54,7 @@ const Edit: React.FC<Props> = ({ plantilla, equipos, temporadas, campeonatos, ju
             {
               name: "jugador_id",
               label: "Jugador",
-              type: "select",
+              type: "searchSelect",
               options: jugadores.map(j => ({ value: j.id, label: j.nombre })),
             },
             { name: "dorsal", label: "Dorsal", type: "text" },

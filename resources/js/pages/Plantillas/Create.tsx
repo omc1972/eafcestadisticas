@@ -68,7 +68,7 @@ const Create: React.FC<Props> = ({ equipos, temporadas, campeonatos, jugadores, 
             {
               name: "jugador_id",
               label: "Jugador",
-              type: "select",
+              type: "searchSelect",
               options: jugadores.map(j => ({ value: j.id, label: j.nombre }))
             },
             { name: "dorsal", label: "Dorsal", type: "text" },

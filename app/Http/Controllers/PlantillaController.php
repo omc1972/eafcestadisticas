@@ -102,6 +102,7 @@ class PlantillaController extends Controller
             'temporada_id' => $validated['temporada_id'],
             'entrenador_id' => $validated['entrenador_id'] ?? null,
             'campeonato_id' => $request->input('campeonato_id'),
+            'liga_id' => Equipo::find($validated['equipo_id'])->liga_id,
         ]);
 
         if (!empty($validated['jugadores'])) {
@@ -307,6 +308,7 @@ class PlantillaController extends Controller
             'temporada_id' => $validated['temporada_id'],
             'entrenador_id' => $validated['entrenador_id'] ?? null,
             'campeonato_id' => $request->input('campeonato_id'),
+            'liga_id' => Equipo::find($validated['equipo_id'])->liga_id,
         ]);
 
         if (!empty($validated['jugadores'])) {
