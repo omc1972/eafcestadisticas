@@ -45,6 +45,16 @@ class LigaController extends Controller
     }
 
     /**
+     * Display the specified resource.
+     */
+    public function show(Liga $liga)
+    {
+        return Inertia::render('Ligas/Show', [
+            'liga' => $liga,
+        ]);
+    }
+
+    /**
      * Show the form for editing the specified resource.
      */
     public function edit(Liga $liga)
