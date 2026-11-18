@@ -60,12 +60,12 @@ const Edit: React.FC<Props> = ({
       label: "Dificultad",
       type: "select",
       options: [
+        { value: "Debutante", label: "Debutante" },
         { value: "Principiante", label: "Principiante" },
-        { value: "Amateur", label: "Amateur" },
-        { value: "Semiprofesional", label: "Semiprofesional" },
+        { value: "Aficionado", label: "Aficionado" },
         { value: "Profesional", label: "Profesional" },
         { value: "Clase Mundial", label: "Clase Mundial" },
-        { value: "Legendario", label: "Legendario" },
+        { value: "Leyenda", label: "Leyenda" },
         { value: "Ultimate", label: "Ultimate" },
       ],
     },
@@ -119,6 +119,7 @@ const Edit: React.FC<Props> = ({
       label: "Alineaciones",
       type: "dynamicArray",
       fields: [
+        { name: "equipo_id", label: "Equipo ID", type: "number", hidden: true, default: partido.equipo_id || 0 },
         { name: "jugador_id", label: "Jugador", type: "select", options: jugadoresOptions },
         { name: "tiros", label: "T", type: "number" },
         { name: "tiros_a_puerta", label: "TP", type: "number" },
@@ -169,6 +170,7 @@ const Edit: React.FC<Props> = ({
             dificultad: partido.dificultad || "",
             jornada: partido.jornada || "",
             equipo_id: partido.equipo_id || 0,
+            local_es_rival: partido.local_es_rival ? 1 : 0,
             visitante_id: partido.visitante_id ?? partido.rival_id ?? 0,
             // Normalizar visitante_es_rival a partir de visitante_id cuando proceda:
             // si visitante_id === 0 entonces es rival (genérico), si existe visitante_id>0 entonces no es rival
@@ -224,6 +226,7 @@ const Edit: React.FC<Props> = ({
             balones_perdidos_rival: partido.balones_perdidos_rival || 0,
             alineaciones: partido.alineaciones
               ? partido.alineaciones.map((a: any) => ({
+                  equipo_id: a.equipo_id ?? partido.equipo_id ?? 0,
                   jugador_id: a.jugador_id,
                   tiros: a.tiros,
                   tiros_a_puerta: a.tiros_a_puerta,

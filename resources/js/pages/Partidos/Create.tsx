@@ -249,12 +249,12 @@ const Create: React.FC<Props> = ({ temporadas, competiciones }) => {
       label: "Dificultad 2",
       type: "select",
       options: [
+        { value: "Debutante", label: "Debutante" },
         { value: "Principiante", label: "Principiante" },
-        { value: "Amateur", label: "Amateur" },
-        { value: "Semiprofesional", label: "Semiprofesional" },
+        { value: "Aficionado", label: "Aficionado" },
         { value: "Profesional", label: "Profesional" },
         { value: "Clase Mundial", label: "Clase Mundial" },
-        { value: "Legendario", label: "Legendario" },
+        { value: "Leyenda", label: "Leyenda" },
         { value: "Ultimate", label: "Ultimate" },
       ],
     },
@@ -582,7 +582,7 @@ const Create: React.FC<Props> = ({ temporadas, competiciones }) => {
                     <SelectValue placeholder="Selecciona dificultad" />
                   </SelectTrigger>
                   <SelectContent>
-                    {["Principiante","Amateur","Semiprofesional","Profesional","Clase Mundial","Legendario","Ultimate"].map((dif) => (
+                    {["Debutante","Principiante","Aficionado","Profesional","Clase Mundial","Leyenda","Ultimate"].map((dif) => (
                       <SelectItem key={dif} value={dif}>{dif}</SelectItem>
                     ))}
                   </SelectContent>
