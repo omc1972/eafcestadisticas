@@ -130,8 +130,12 @@ const View: React.FC<Props> = ({ partido, alineaciones_locales: alineacionesLoca
   const equipoLocal = esLocal ? partido.equipo : visitante;
   const equipoVisitante = esLocal ? visitante : partido.equipo;
   const eventos = partido.eventos ?? [];
-  const alineaciones_locales = alineacionesLocalesProp ?? (partido.alineaciones_locales ?? []);
-  const alineaciones_visitantes = alineacionesVisitantesProp ?? (partido.alineaciones_visitantes ?? []);
+  // alineacionesEquipo/alineacionesRival vienen clasificadas por equipo_id (partido.equipo siempre es "equipo",
+  // independientemente de si jugó como local o visitante), así que hay que swapearlas igual que goles y eventos.
+  const alineacionesEquipo = alineacionesLocalesProp ?? (partido.alineaciones_locales ?? []);
+  const alineacionesRival = alineacionesVisitantesProp ?? (partido.alineaciones_visitantes ?? []);
+  const alineaciones_locales = esLocal ? alineacionesEquipo : alineacionesRival;
+  const alineaciones_visitantes = esLocal ? alineacionesRival : alineacionesEquipo;
   const golesLocal = esLocal ? partido.goles_equipo : partido.goles_rival;
   const golesVisitante = esLocal ? partido.goles_rival : partido.goles_equipo;
 
