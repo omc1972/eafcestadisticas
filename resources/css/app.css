@@ -153,6 +153,43 @@
     --sidebar-ring: #2d7f94;
 }
 
+.theme-beige {
+    --background: #f2e8d5;
+    --foreground: #3a2f20;
+    --card: #faf2e2;
+    --card-foreground: #3a2f20;
+    --popover: #faf2e2;
+    --popover-foreground: #3a2f20;
+    --primary: var(--hacce-azul-oscuro);
+    --primary-foreground: #ffffff;
+    --secondary: #e6d8b8;
+    --secondary-foreground: #3a2f20;
+    --muted: #ece0c4;
+    --muted-foreground: #6b5a3f;
+    --accent: #e2d2a8;
+    --accent-foreground: #3a2616;
+    --destructive: #a8342b;
+    --destructive-foreground: #a8342b;
+    --success: #3c6b2a;
+    --warning: #9c6500;
+    --border: #cdb98c;
+    --input: #9c8a62;
+    --ring: var(--hacce-azul-oscuro);
+    --chart-1: var(--hacce-azul-oscuro);
+    --chart-2: #9c6500;
+    --chart-3: #6b5a3f;
+    --chart-4: #3a2616;
+    --chart-5: #a8342b;
+    --sidebar: #ece0c4;
+    --sidebar-foreground: #3a2f20;
+    --sidebar-primary: var(--hacce-azul-oscuro);
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #e2d2a8;
+    --sidebar-accent-foreground: #3a2616;
+    --sidebar-border: #cdb98c;
+    --sidebar-ring: var(--hacce-azul-oscuro);
+}
+
 @layer base {
     * {
         @apply border-border;

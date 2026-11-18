@@ -20,6 +20,10 @@
             html.dark {
                 background-color: #111111;
             }
+
+            html.theme-beige {
+                background-color: #f2e8d5;
+            }
         </style>
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>

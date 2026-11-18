@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
-export type Appearance = 'light' | 'dark' | 'system';
+export type Appearance = 'light' | 'dark' | 'beige' | 'system';
 
 const prefersDark = () => {
     if (typeof window === 'undefined') {
@@ -20,11 +20,17 @@ const setCookie = (name: string, value: string, days = 365) => {
 };
 
 const applyTheme = (appearance: Appearance) => {
-    const isDark =
-        appearance === 'dark' || (appearance === 'system' && prefersDark());
+    const resolved =
+        appearance === 'system'
+            ? prefersDark()
+                ? 'dark'
+                : 'light'
+            : appearance;
 
-    document.documentElement.classList.toggle('dark', isDark);
-    document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+    const root = document.documentElement;
+    root.classList.toggle('dark', resolved === 'dark');
+    root.classList.toggle('theme-beige', resolved === 'beige');
+    root.style.colorScheme = resolved === 'dark' ? 'dark' : 'light';
 };
 
 const mediaQuery = () => {
