@@ -77,7 +77,7 @@ class SquadBattleController extends Controller
         $partidosQuery = \App\Models\Partido::query()
             ->whereNotNull('goles_equipo')
             ->whereNotNull('goles_rival')
-            ->with(['equipo', 'visitanteEquipo'])
+            ->with(['equipo', 'visitanteEquipo', 'rival'])
             ->where(function ($q) use ($equipoIds) {
                 $q->whereIn('equipo_id', $equipoIds)
                   ->orWhereIn('visitante_id', $equipoIds);
@@ -119,9 +119,11 @@ class SquadBattleController extends Controller
                     'interceciones_equipo' => 0,
                     'penalties_equipo' => 0,
                     'penalties_rival' => 0,
+                    'dificultad_media' => null,
                 ];
 
                 $totalPosesion = 0;
+                $valoresRival = [];
                 foreach ($partidos as $p) {
                     $esLocal     = !$p->local_es_rival     && $p->equipo_id    == $eqId;
                     $esVisitante = !$p->visitante_es_rival && $p->visitante_id == $eqId;
@@ -147,6 +149,11 @@ class SquadBattleController extends Controller
                         $stats['penalties_equipo'] += $esLocal ? ($p->penalties_equipo ?? 0) : ($p->penalties_rival ?? 0);
                         $stats['penalties_rival'] += $esLocal ? ($p->penalties_rival ?? 0) : ($p->penalties_equipo ?? 0);
 
+                        $valorRival = $esLocal ? $p->valor_rival : $p->valor_equipo;
+                        if (!is_null($valorRival)) {
+                            $valoresRival[] = $valorRival;
+                        }
+
                         if ($golesFavor > $golesContra) {
                             $stats['victorias']++;
                             $stats['puntos'] += 3;
@@ -162,6 +169,9 @@ class SquadBattleController extends Controller
                 $stats['diferencia_goles'] = $stats['goles_favor'] - $stats['goles_contra'];
                 if ($stats['partidos_jugados'] > 0) {
                     $stats['posesion_promedio'] = round($totalPosesion / $stats['partidos_jugados'], 1);
+                }
+                if (count($valoresRival) > 0) {
+                    $stats['dificultad_media'] = round(array_sum($valoresRival) / count($valoresRival), 2);
                 }
 
                 $estadisticas[] = $stats;
@@ -190,10 +200,30 @@ class SquadBattleController extends Controller
                 'penalties_equipo' => collect($estadisticas)->sortByDesc('penalties_equipo')->take(5)->values()->all(),
             ];
 
+            $partidosDivision = $partidos->filter(function ($p) use ($divisionEquipoIds) {
+                $localEsDivision = !$p->local_es_rival && in_array($p->equipo_id, $divisionEquipoIds);
+                $visitanteEsDivision = !$p->visitante_es_rival && in_array($p->visitante_id, $divisionEquipoIds);
+                return $localEsDivision || $visitanteEsDivision;
+            });
+
             $divisionesData[$division->id] = [
                 'estadisticas' => $estadisticas,
                 'estadisticas_equipos' => $estadisticas_equipos,
-                'partidos' => $partidos->filter(fn($p) => in_array($p->equipo_id, $divisionEquipoIds) && in_array($p->visitante_id, $divisionEquipoIds)),
+                'partidos' => $partidosDivision->map(fn ($p) => [
+                    'id' => $p->id,
+                    'jornada' => $p->jornada,
+                    'equipo_id' => $p->equipo_id,
+                    'visitante_id' => $p->visitante_id,
+                    'local_es_rival' => (bool) $p->local_es_rival,
+                    'visitante_es_rival' => (bool) $p->visitante_es_rival,
+                    'goles_equipo' => $p->goles_equipo,
+                    'goles_rival' => $p->goles_rival,
+                    'valor_equipo' => $p->valor_equipo,
+                    'valor_rival' => $p->valor_rival,
+                    'equipo' => $p->equipo ? ['id' => $p->equipo->id, 'nombre' => $p->equipo->nombre, 'codigo' => $p->equipo->codigo] : null,
+                    'visitante_equipo' => $p->visitanteEquipo ? ['id' => $p->visitanteEquipo->id, 'nombre' => $p->visitanteEquipo->nombre, 'codigo' => $p->visitanteEquipo->codigo] : null,
+                    'rival' => $p->rival ? ['id' => $p->rival->id, 'nombre' => $p->rival->nombre] : null,
+                ])->values(),
             ];
         }
 

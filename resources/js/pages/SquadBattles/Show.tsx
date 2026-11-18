@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useMemo } from "react";
 import { Head, router } from "@inertiajs/react";
 import AppLayout from "@/layouts/app-layout";
 import { dashboard } from "@/routes";
@@ -46,12 +46,31 @@ interface Estadistica {
   interceciones_equipo: number;
   penalties_equipo: number;
   penalties_rival: number;
+  dificultad_media?: number | null;
+}
+
+interface EquipoBasico { id: number; nombre: string; codigo?: string | null }
+
+interface PartidoDivision {
+  id: number;
+  jornada: number | string;
+  equipo_id: number;
+  visitante_id: number | null;
+  local_es_rival: boolean;
+  visitante_es_rival: boolean;
+  goles_equipo: number;
+  goles_rival: number;
+  valor_equipo?: number | null;
+  valor_rival?: number | null;
+  equipo: EquipoBasico | null;
+  visitante_equipo: EquipoBasico | null;
+  rival: { id: number; nombre: string } | null;
 }
 
 interface DivisionData {
   estadisticas: Estadistica[];
   estadisticas_equipos: Record<string, Estadistica[]>;
-  partidos: any[];
+  partidos: PartidoDivision[];
 }
 
 interface Props {
@@ -147,50 +166,269 @@ const TopEquiposTable: React.FC<{ data: Estadistica[]; field: keyof Estadistica;
   </Table>
 );
 
-const ClasificacionTab: React.FC<{ estadisticas: Estadistica[] }> = ({ estadisticas }) => (
-  <Card>
-    <CardHeader><CardTitle>Tabla de Clasificación</CardTitle></CardHeader>
-    <CardContent>
-      <Table className="text-xs">
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-10">#</TableHead>
-            <TableHead>Equipo</TableHead>
-            <TableHead className="text-center">PJ</TableHead>
-            <TableHead className="text-center">V</TableHead>
-            <TableHead className="text-center">E</TableHead>
-            <TableHead className="text-center">D</TableHead>
-            <TableHead className="text-center">GF</TableHead>
-            <TableHead className="text-center">GC</TableHead>
-            <TableHead className="text-center">DG</TableHead>
-            <TableHead className="text-center font-bold">PTS</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {estadisticas.map((stat, index) => (
-            <TableRow key={stat.equipo.id} className={index === 0 ? 'bg-success/10' : ''}>
-              <TableCell className="font-bold">
-                {index === 0 && <Trophy className="h-4 w-4 inline text-warning mr-1" />}
-                {index + 1}
-              </TableCell>
-              <TableCell className="font-medium">{stat.equipo.nombre}</TableCell>
-              <TableCell className="text-center">{stat.partidos_jugados}</TableCell>
-              <TableCell className="text-center text-success">{stat.victorias}</TableCell>
-              <TableCell className="text-center text-warning">{stat.empates}</TableCell>
-              <TableCell className="text-center text-destructive">{stat.derrotas}</TableCell>
-              <TableCell className="text-center">{stat.goles_favor}</TableCell>
-              <TableCell className="text-center">{stat.goles_contra}</TableCell>
-              <TableCell className={`text-center font-medium ${stat.diferencia_goles > 0 ? 'text-success' : stat.diferencia_goles < 0 ? 'text-destructive' : ''}`}>
-                {stat.diferencia_goles > 0 ? '+' : ''}{stat.diferencia_goles}
-              </TableCell>
-              <TableCell className="text-center font-bold text-lg">{stat.puntos}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </CardContent>
-  </Card>
-);
+const parseJornadaSB = (value: number | string) => {
+  if (typeof value === 'number') return value > 0 ? value : 1;
+  const match = String(value).match(/(\d+)/);
+  return match ? Number(match[1]) : 1;
+};
+
+interface ClasificacionJornadaRow {
+  equipo: Equipo;
+  partidos_jugados: number;
+  victorias: number;
+  empates: number;
+  derrotas: number;
+  goles_favor: number;
+  goles_contra: number;
+  diferencia_goles: number;
+  puntos: number;
+  dificultad_media: number | null;
+}
+
+const getDifficultyBadgeSB = (diferencia: number) => {
+  if (diferencia <= -15) return { color: 'bg-destructive', icon: '😱' };
+  if (diferencia <= -3) return { color: 'bg-destructive/60', icon: '😰' };
+  if (diferencia <= 3) return { color: 'bg-warning', icon: '😐' };
+  if (diferencia <= 15) return { color: 'bg-success/60', icon: '🙂' };
+  return { color: 'bg-success', icon: '🏆' };
+};
+
+const ClasificacionTab: React.FC<{ estadisticas: Estadistica[]; partidos: PartidoDivision[] }> = ({ estadisticas, partidos }) => {
+  const partidosPorJornada = partidos.reduce((acc, p) => {
+    const j = parseJornadaSB(p.jornada);
+    if (!acc[j]) acc[j] = [];
+    acc[j].push(p);
+    return acc;
+  }, {} as Record<number, PartidoDivision[]>);
+  const jornadas = Object.keys(partidosPorJornada).map(Number).sort((a, b) => a - b);
+
+  const [jornadaIndex, setJornadaIndex] = useState(() => (jornadas.length > 0 ? jornadas.length - 1 : 0));
+  const jornadaActual = jornadas[jornadaIndex] ?? null;
+  const esUltimaJornada = jornadas.length > 0 && jornadaIndex === jornadas.length - 1;
+
+  // Clasificación acumulada con los partidos hasta la jornada seleccionada (incluida).
+  const clasificacionPorJornada = useMemo<ClasificacionJornadaRow[]>(() => {
+    const filas = new Map<number, ClasificacionJornadaRow>(
+      estadisticas.map((e) => [e.equipo.id, {
+        equipo: e.equipo,
+        partidos_jugados: 0,
+        victorias: 0,
+        empates: 0,
+        derrotas: 0,
+        goles_favor: 0,
+        goles_contra: 0,
+        diferencia_goles: 0,
+        puntos: 0,
+        dificultad_media: null,
+      }])
+    );
+    const valoresRivalPorEquipo = new Map<number, number[]>();
+
+    const partidosHastaJornada = jornadaActual == null
+      ? []
+      : partidos.filter((p) => parseJornadaSB(p.jornada) <= jornadaActual);
+
+    const sumarResultado = (fila: ClasificacionJornadaRow, gFavor: number, gContra: number) => {
+      fila.partidos_jugados++;
+      fila.goles_favor += gFavor;
+      fila.goles_contra += gContra;
+      if (gFavor > gContra) { fila.victorias++; fila.puntos += 3; }
+      else if (gFavor === gContra) { fila.empates++; fila.puntos += 1; }
+      else { fila.derrotas++; }
+    };
+
+    partidosHastaJornada.forEach((p) => {
+      const esLocal = !p.local_es_rival && filas.has(p.equipo_id);
+      const esVisitante = !p.visitante_es_rival && p.visitante_id != null && filas.has(p.visitante_id);
+
+      if (esLocal) {
+        const fila = filas.get(p.equipo_id)!;
+        sumarResultado(fila, p.goles_equipo, p.goles_rival);
+        if (p.valor_rival != null) {
+          const arr = valoresRivalPorEquipo.get(p.equipo_id) ?? [];
+          arr.push(p.valor_rival);
+          valoresRivalPorEquipo.set(p.equipo_id, arr);
+        }
+      }
+      if (esVisitante) {
+        const fila = filas.get(p.visitante_id as number)!;
+        sumarResultado(fila, p.goles_rival, p.goles_equipo);
+        if (p.valor_equipo != null) {
+          const arr = valoresRivalPorEquipo.get(p.visitante_id as number) ?? [];
+          arr.push(p.valor_equipo);
+          valoresRivalPorEquipo.set(p.visitante_id as number, arr);
+        }
+      }
+    });
+
+    const resultado = Array.from(filas.values());
+    resultado.forEach((fila) => {
+      fila.diferencia_goles = fila.goles_favor - fila.goles_contra;
+      const valores = valoresRivalPorEquipo.get(fila.equipo.id);
+      fila.dificultad_media = valores && valores.length > 0
+        ? Math.round((valores.reduce((a, b) => a + b, 0) / valores.length) * 100) / 100
+        : null;
+    });
+
+    return resultado.sort((a, b) =>
+      b.puntos - a.puntos ||
+      b.diferencia_goles - a.diferencia_goles ||
+      b.goles_favor - a.goles_favor
+    );
+  }, [estadisticas, partidos, jornadaActual]);
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      {/* Clasificación — 3/4 */}
+      <div className="lg:col-span-3">
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              Tabla de Clasificación
+              {jornadaActual != null && (
+                <span className="ml-2 text-sm font-normal text-muted-foreground">
+                  {esUltimaJornada ? '(final)' : `(hasta jornada ${jornadaActual})`}
+                </span>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table className="text-xs">
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-10">#</TableHead>
+                  <TableHead>Equipo</TableHead>
+                  <TableHead className="text-center" title="Media del valor de los rivales enfrentados">Dificultad</TableHead>
+                  <TableHead className="text-center">PJ</TableHead>
+                  <TableHead className="text-center">V</TableHead>
+                  <TableHead className="text-center">E</TableHead>
+                  <TableHead className="text-center">D</TableHead>
+                  <TableHead className="text-center">GF</TableHead>
+                  <TableHead className="text-center">GC</TableHead>
+                  <TableHead className="text-center">DG</TableHead>
+                  <TableHead className="text-center font-bold">PTS</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {clasificacionPorJornada.map((stat, index) => (
+                  <TableRow key={stat.equipo.id} className={index === 0 ? 'bg-success/10' : ''}>
+                    <TableCell className="font-bold">
+                      {index === 0 && <Trophy className="h-4 w-4 inline text-warning mr-1" />}
+                      {index + 1}
+                    </TableCell>
+                    <TableCell className="font-medium">{stat.equipo.nombre}</TableCell>
+                    <TableCell className="text-center text-muted-foreground">
+                      {stat.dificultad_media != null ? stat.dificultad_media : '-'}
+                    </TableCell>
+                    <TableCell className="text-center">{stat.partidos_jugados}</TableCell>
+                    <TableCell className="text-center text-success">{stat.victorias}</TableCell>
+                    <TableCell className="text-center text-warning">{stat.empates}</TableCell>
+                    <TableCell className="text-center text-destructive">{stat.derrotas}</TableCell>
+                    <TableCell className="text-center">{stat.goles_favor}</TableCell>
+                    <TableCell className="text-center">{stat.goles_contra}</TableCell>
+                    <TableCell className={`text-center font-medium ${stat.diferencia_goles > 0 ? 'text-success' : stat.diferencia_goles < 0 ? 'text-destructive' : ''}`}>
+                      {stat.diferencia_goles > 0 ? '+' : ''}{stat.diferencia_goles}
+                    </TableCell>
+                    <TableCell className="text-center font-bold text-lg">{stat.puntos}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Jornadas — 1/4 */}
+      <div className="lg:col-span-1">
+        <Card className="h-full">
+          <CardHeader>
+            <div className="flex items-center justify-between gap-2">
+              <CardTitle>{jornadaActual ? `Jornada ${jornadaActual}` : 'Jornadas'}</CardTitle>
+              {jornadas.length > 0 && (
+                <button
+                  type="button"
+                  className="rounded border px-2 py-1 text-xs disabled:opacity-50"
+                  disabled={esUltimaJornada}
+                  onClick={() => setJornadaIndex(jornadas.length - 1)}
+                  title="Ver los resultados de la última jornada"
+                >
+                  Última jornada
+                </button>
+              )}
+            </div>
+            {jornadas.length > 0 && (
+              <div className="flex items-center justify-between gap-1 pt-1">
+                <button
+                  type="button"
+                  className="rounded border px-2 py-1 text-xs disabled:opacity-50"
+                  disabled={jornadaIndex === 0}
+                  onClick={() => setJornadaIndex((v) => Math.max(0, v - 1))}
+                >
+                  Anterior
+                </button>
+                <span className="text-xs text-muted-foreground">{jornadaIndex + 1}/{jornadas.length}</span>
+                <button
+                  type="button"
+                  className="rounded border px-2 py-1 text-xs disabled:opacity-50"
+                  disabled={jornadaIndex >= jornadas.length - 1}
+                  onClick={() => setJornadaIndex((v) => Math.min(jornadas.length - 1, v + 1))}
+                >
+                  Siguiente
+                </button>
+              </div>
+            )}
+          </CardHeader>
+          <CardContent className="pr-1">
+            {jornadaActual ? (
+              <div className="space-y-1">
+                {partidosPorJornada[jornadaActual].map((partido) => {
+                  const diff = (partido.valor_equipo ?? 0) - (partido.valor_rival ?? 0);
+                  const badge = getDifficultyBadgeSB(diff);
+                  const gLocal = partido.goles_equipo;
+                  const gVis = partido.goles_rival;
+                  const isV = gLocal > gVis;
+                  const isE = gLocal === gVis;
+                  const localCodigo = partido.equipo?.codigo || partido.equipo?.nombre || '—';
+                  const visitanteCodigo = partido.visitante_equipo?.codigo || partido.visitante_equipo?.nombre || partido.rival?.nombre || '—';
+                  return (
+                    <div key={partido.id} className="flex items-start gap-1.5 p-1.5 border rounded text-xs">
+                      <div className="flex-1 min-w-0">
+                        <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-2 min-w-0">
+                          <div className="min-w-0">
+                            <div className="font-bold text-primary truncate">{localCodigo}</div>
+                            {partido.local_es_rival && partido.rival && (
+                              <div className="text-[10px] text-muted-foreground truncate">{partido.rival.nombre}</div>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-1 pt-[1px]">
+                            <span className={`font-extrabold px-2 py-0.5 rounded whitespace-nowrap text-sm tracking-wide ${isV ? 'bg-success/20 text-success' : isE ? 'bg-warning/20 text-warning' : 'bg-destructive/20 text-destructive'}`}>
+                              {gLocal}-{gVis}
+                            </span>
+                          </div>
+
+                          <div className="min-w-0 text-right">
+                            <div className="font-bold text-primary truncate">{visitanteCodigo}</div>
+                            {partido.visitante_es_rival && partido.rival && (
+                              <div className="text-[10px] text-muted-foreground truncate">{partido.rival.nombre}</div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <span className={`px-1 py-0.5 rounded text-[9px] font-medium text-white ${badge.color}`}>{badge.icon}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-sm text-muted-foreground">No hay jornadas disponibles</div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
 
 const EstadisticasEquiposTab: React.FC<{ stats: Record<string, Estadistica[]> }> = ({ stats }) => (
   <div className="space-y-8">
@@ -510,7 +748,7 @@ const DivisionContent: React.FC<{
         </TabsContent>
 
         <TabsContent value="clasificacion" className="mt-4">
-          <ClasificacionTab estadisticas={divisionData.estadisticas} />
+          <ClasificacionTab estadisticas={divisionData.estadisticas} partidos={divisionData.partidos} />
         </TabsContent>
 
         <TabsContent value="equipos" className="mt-4">

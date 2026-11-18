@@ -88,7 +88,8 @@ class RivalsBattleController extends Controller
 
         $standingsMap = [];
         foreach ($equipoIds as $eqId) {
-            $s = ['pj' => 0, 'pg' => 0, 'pe' => 0, 'pp' => 0, 'gf' => 0, 'gc' => 0, 'dif' => 0, 'pts' => 0];
+            $s = ['pj' => 0, 'pg' => 0, 'pe' => 0, 'pp' => 0, 'gf' => 0, 'gc' => 0, 'dif' => 0, 'pts' => 0, 'dificultad' => null];
+            $valoresRival = [];
 
             foreach ($partidos as $p) {
                 $esLocal     = !$p->local_es_rival     && $p->equipo_id    == $eqId;
@@ -99,16 +100,21 @@ class RivalsBattleController extends Controller
                     if ($p->goles_equipo > $p->goles_rival)      $s['pg']++;
                     elseif ($p->goles_equipo == $p->goles_rival) $s['pe']++;
                     else                                          $s['pp']++;
+                    if (!is_null($p->valor_rival)) $valoresRival[] = $p->valor_rival;
                 } elseif ($esVisitante) {
                     $s['pj']++; $s['gf'] += $p->goles_rival; $s['gc'] += $p->goles_equipo;
                     if ($p->goles_rival > $p->goles_equipo)      $s['pg']++;
                     elseif ($p->goles_rival == $p->goles_equipo) $s['pe']++;
                     else                                          $s['pp']++;
+                    if (!is_null($p->valor_equipo)) $valoresRival[] = $p->valor_equipo;
                 }
             }
 
             $s['dif'] = $s['gf'] - $s['gc'];
             $s['pts'] = $s['pg'] * 3 + $s['pe'];
+            if (count($valoresRival) > 0) {
+                $s['dificultad'] = round(array_sum($valoresRival) / count($valoresRival), 2);
+            }
             $standingsMap[$eqId] = $s;
         }
 

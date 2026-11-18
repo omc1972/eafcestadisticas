@@ -41,6 +41,7 @@ interface PlantillaInfo {
 interface Standing {
   pj: number; pg: number; pe: number; pp: number;
   gf: number; gc: number; dif: number; pts: number;
+  dificultad?: number | null;
 }
 
 interface Props {
@@ -129,7 +130,7 @@ const ClasificacionTable: React.FC<{
   plantillasMap: Record<number, PlantillaInfo>;
 }> = ({ rivales, standingsMap, plantillasMap }) => {
   const rows = [...rivales]
-    .map(dr => ({ equipo: dr.equipo, s: standingsMap[dr.equipo.id] ?? { pj:0,pg:0,pe:0,pp:0,gf:0,gc:0,dif:0,pts:0 } }))
+    .map(dr => ({ equipo: dr.equipo, s: standingsMap[dr.equipo.id] ?? { pj:0,pg:0,pe:0,pp:0,gf:0,gc:0,dif:0,pts:0,dificultad:null } }))
     .sort((a, b) => b.s.pts - a.s.pts || b.s.dif - a.s.dif || b.s.gf - a.s.gf);
 
   return (
@@ -138,6 +139,7 @@ const ClasificacionTable: React.FC<{
         <TableRow>
           <TableHead className="p-1">#</TableHead>
           <TableHead className="p-1">Equipo</TableHead>
+          <TableHead className="p-1 text-center" title="Media del valor de los rivales enfrentados">Dificultad</TableHead>
           <TableHead className="p-1 text-center">PJ</TableHead>
           <TableHead className="p-1 text-center">PG</TableHead>
           <TableHead className="p-1 text-center">PE</TableHead>
@@ -161,6 +163,9 @@ const ClasificacionTable: React.FC<{
                     ({info.media_alineacion ?? "—"}/{info.media_plantilla ?? "—"})
                   </span>
                 )}
+              </TableCell>
+              <TableCell className="p-1 text-center text-muted-foreground">
+                {s.dificultad != null ? s.dificultad : '-'}
               </TableCell>
               <TableCell className="p-1 text-center">{s.pj}</TableCell>
               <TableCell className="p-1 text-center text-success">{s.pg}</TableCell>

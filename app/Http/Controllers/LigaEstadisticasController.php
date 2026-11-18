@@ -50,9 +50,9 @@ class LigaEstadisticasController extends Controller
                     || (int) $partido->visitante_id === (int) $equipoId;
             });
 
-            // Calcular la media de valoración de los oponentes y la media de campo rival.
+            // Calcular la media de valoración de los oponentes y la media del valor de los rivales (valor_rival/valor_equipo por partido).
             $valoracionesRivales = [];
-            $mediasRival = [];
+            $valoresRival = [];
             foreach ($partidosEquipo as $partido) {
                 $esLocal = (int) $partido->equipo_id === (int) $equipoId;
                 $oponente = $esLocal ? $partido->visitanteEquipo : $partido->equipo;
@@ -61,19 +61,19 @@ class LigaEstadisticasController extends Controller
                     $valoracionesRivales[] = $oponente->valoracion;
                 }
 
-                $mediaOponente = $esLocal ? $partido->media_rival : $partido->media_equipo;
-                if (!is_null($mediaOponente)) {
-                    $mediasRival[] = $mediaOponente;
+                $valorRival = $esLocal ? $partido->valor_rival : $partido->valor_equipo;
+                if (!is_null($valorRival)) {
+                    $valoresRival[] = $valorRival;
                 }
             }
             $mediaValoracionRivales = count($valoracionesRivales) > 0 ? round(array_sum($valoracionesRivales) / count($valoracionesRivales), 2) : null;
-            $mediaMediaRival = count($mediasRival) > 0 ? round(array_sum($mediasRival) / count($mediasRival), 2) : null;
+            $mediaValorRival = count($valoresRival) > 0 ? round(array_sum($valoresRival) / count($valoresRival), 2) : null;
 
             // Mostrar ambas medias junto al nombre
             $nombreEquipoClasificacion = $equipo->nombre;
             $extras = [];
             if ($mediaValoracionRivales !== null) $extras[] = $mediaValoracionRivales;
-            if ($mediaMediaRival !== null) $extras[] = $mediaMediaRival;
+            if ($mediaValorRival !== null) $extras[] = $mediaValorRival;
             if (count($extras) > 0) {
                 $nombreEquipoClasificacion .= ' (' . implode(' / ', $extras) . ')';
             }
@@ -85,9 +85,10 @@ class LigaEstadisticasController extends Controller
                     'codigo' => $equipo->codigo,
                     'escudo' => $equipo->escudo,
                     'media_valoracion_rivales' => $mediaValoracionRivales,
-                    'media_media_rival' => $mediaMediaRival,
+                    'media_valor_rival' => $mediaValorRival,
                 ],
                 'orden_liga' => $plantilla->orden_liga,
+                'dificultad_media' => $mediaValorRival,
                 'partidos_jugados' => $partidosEquipo->count(),
                 'victorias' => 0,
                 'empates' => 0,

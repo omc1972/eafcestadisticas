@@ -103,6 +103,8 @@ class CompeticionController extends Controller
                     'visitante_nombre' => ($away ? (\App\Models\Equipo::find($away)->nombre ?? null) : null),
                     'goles_equipo' => $g1,
                     'goles_rival' => $g2,
+                    'valor_equipo' => $m->valor_equipo,
+                    'valor_rival' => $m->valor_rival,
                     'fecha' => $m->fecha ?? null,
                 ];
             }

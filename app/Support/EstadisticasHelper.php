@@ -39,9 +39,11 @@ class EstadisticasHelper
             'balones_ganados_equipo'  => 0,
             'balones_perdidos_equipo' => 0,
             'interceciones_equipo'    => 0,
+            'dificultad_media'        => null,
         ], $base);
 
         $totalPosesion = 0;
+        $valoresRival = [];
         foreach ($partidos as $p) {
             $esLocal = (int) $p->equipo_id === $equipoId;
             $gFavor  = $esLocal ? ($p->goles_equipo ?? 0) : ($p->goles_rival ?? 0);
@@ -65,6 +67,11 @@ class EstadisticasHelper
             $stats['balones_perdidos_equipo'] += $esLocal ? ($p->balones_perdidos_equipo ?? 0) : ($p->balones_perdidos_rival ?? 0);
             $stats['interceciones_equipo']    += $esLocal ? ($p->interceciones_equipo    ?? 0) : ($p->intercepciones_rival  ?? 0);
 
+            $valorRival = $esLocal ? $p->valor_rival : $p->valor_equipo;
+            if (!is_null($valorRival)) {
+                $valoresRival[] = $valorRival;
+            }
+
             if ($gFavor > $gContra)      { $stats['victorias']++; $stats['puntos'] += 3; }
             elseif ($gFavor == $gContra) { $stats['empates']++;   $stats['puntos'] += 1; }
             else                         { $stats['derrotas']++; }
@@ -73,6 +80,9 @@ class EstadisticasHelper
         $stats['diferencia_goles'] = $stats['goles_favor'] - $stats['goles_contra'];
         if ($stats['partidos_jugados'] > 0) {
             $stats['posesion_promedio'] = round($totalPosesion / $stats['partidos_jugados'], 1);
+        }
+        if (count($valoresRival) > 0) {
+            $stats['dificultad_media'] = round(array_sum($valoresRival) / count($valoresRival), 2);
         }
 
         return $stats;

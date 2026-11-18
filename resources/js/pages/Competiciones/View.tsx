@@ -141,6 +141,7 @@ const View: React.FC<Props> = ({ competicion, resumenPorTemporada = [] }) => {
           losses: 0,
           gf: 0,
           ga: 0,
+          valoresRival: [] as number[],
         };
       }
       const s = statsMap[id];
@@ -152,6 +153,7 @@ const View: React.FC<Props> = ({ competicion, resumenPorTemporada = [] }) => {
       if (gEquipo > gRival) s.wins += 1;
       else if (gEquipo === gRival) s.draws += 1;
       else s.losses += 1;
+      if (m.valor_rival != null) s.valoresRival.push(Number(m.valor_rival));
     });
 
     const equipos = Object.values(statsMap).map((s: any) => ({
@@ -160,6 +162,9 @@ const View: React.FC<Props> = ({ competicion, resumenPorTemporada = [] }) => {
       gf: s.gf ?? 0,
       ga: s.ga ?? 0,
       played: s.played ?? 0,
+      dificultad: s.valoresRival && s.valoresRival.length
+        ? Math.round((s.valoresRival.reduce((a: number, b: number) => a + b, 0) / s.valoresRival.length) * 100) / 100
+        : null,
     })).sort((a: any, b: any) => (b.puntos - a.puntos) || ((b.gf - b.ga) - (a.gf - a.ga)) || (b.gf - a.gf));
 
     const partidos = (t.matches ?? []).filter((p: any) => p.equipo_id != null && p.equipo_id !== undefined);
@@ -186,6 +191,7 @@ const View: React.FC<Props> = ({ competicion, resumenPorTemporada = [] }) => {
                       <TableRow>
                         <TableHead className="w-8">#</TableHead>
                         <TableHead>Equipo</TableHead>
+                        <TableHead className="text-center" title="Media del valor de los rivales enfrentados">Dificultad</TableHead>
                         <TableHead className="text-center">PJ</TableHead>
                         <TableHead className="text-center">V</TableHead>
                         <TableHead className="text-center">E</TableHead>
@@ -205,6 +211,9 @@ const View: React.FC<Props> = ({ competicion, resumenPorTemporada = [] }) => {
                               {eq.escudo && <img src={`/storage/images/${eq.escudo}`} alt={eq.nombre_mostrar} className="h-6 w-6 object-contain" onError={e => { (e.currentTarget as HTMLImageElement).src = '/storage/images/nologo.png'; }} />}
                               <span className="font-medium">{eq.nombre_mostrar}</span>
                             </div>
+                          </TableCell>
+                          <TableCell className="text-center text-muted-foreground">
+                            {eq.dificultad != null ? eq.dificultad : '-'}
                           </TableCell>
                           <TableCell className="text-center">{eq.played}</TableCell>
                           <TableCell className="text-center text-success">{eq.wins}</TableCell>

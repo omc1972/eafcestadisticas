@@ -11,6 +11,7 @@ interface Equipo {
 interface Estadistica {
     equipo: Equipo;
     orden_liga: number | null;
+    dificultad_media?: number | null;
     partidos_jugados: number;
     victorias: number;
     empates: number;
@@ -34,6 +35,7 @@ export default function ClasificacionTablaMini({ estadisticas, mostrarCodigo }: 
                     <TableRow>
                         <TableHead className="w-8">#</TableHead>
                         <TableHead>Equipo</TableHead>
+                        <TableHead className="text-center" title="Media del valor de los rivales enfrentados">Dif.</TableHead>
                         <TableHead className="text-center">PJ</TableHead>
                         <TableHead className="text-center">V</TableHead>
                         <TableHead className="text-center">E</TableHead>
@@ -70,6 +72,9 @@ export default function ClasificacionTablaMini({ estadisticas, mostrarCodigo }: 
                                         {mostrarCodigo ? stat.equipo.codigo : stat.equipo.nombre}
                                     </span>
                                 </div>
+                            </TableCell>
+                            <TableCell className="text-center text-muted-foreground">
+                                {stat.dificultad_media != null ? stat.dificultad_media : '-'}
                             </TableCell>
                             <TableCell className="text-center">{stat.partidos_jugados}</TableCell>
                             <TableCell className="text-center text-success">{stat.victorias}</TableCell>

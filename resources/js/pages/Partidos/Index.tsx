@@ -78,28 +78,31 @@ const Index: React.FC<Props> = ({ partidos }) => {
     </div>
   );
 
-  // Dificultad = valor del equipo - valor del rival (el mismo dato que se ve en el detalle del partido).
+  // Dificultad = valor del equipo - valor del rival.
   // Positivo => favorable (equipo más fuerte), negativo => más difícil (rival más fuerte).
+  // El número final del widget es el valor del rival en bruto, para dar contexto a la diferencia.
   const MAX_DIFERENCIA = 20;
   const renderDificultad = (valorEquipo?: number | null, valorRival?: number | null) => {
-    if (valorEquipo == null || valorRival == null) {
-      return <span className="text-xs text-muted-foreground">-</span>;
-    }
-    const diff = valorEquipo - valorRival;
-    const esFavorable = diff >= 0;
-    const anchoRelleno = (Math.min(Math.abs(diff), MAX_DIFERENCIA) / MAX_DIFERENCIA) * 50;
+    const diff = valorEquipo != null && valorRival != null ? valorEquipo - valorRival : null;
+    const esFavorable = diff != null && diff >= 0;
+    const anchoRelleno = diff != null ? (Math.min(Math.abs(diff), MAX_DIFERENCIA) / MAX_DIFERENCIA) * 50 : 0;
 
     return (
-      <div className="flex items-center gap-2 w-36">
+      <div className="flex items-center gap-2 w-44">
         <div className="relative flex-1 h-1.5 rounded-full bg-muted">
           <div className="absolute inset-y-0 left-1/2 w-px bg-border" />
-          <div
-            className={`absolute inset-y-0 ${esFavorable ? 'left-1/2 rounded-r-full bg-success' : 'right-1/2 rounded-l-full bg-destructive'}`}
-            style={{ width: `${anchoRelleno}%` }}
-          />
+          {diff != null && (
+            <div
+              className={`absolute inset-y-0 ${esFavorable ? 'left-1/2 rounded-r-full bg-success' : 'right-1/2 rounded-l-full bg-destructive'}`}
+              style={{ width: `${anchoRelleno}%` }}
+            />
+          )}
         </div>
-        <span className={`text-xs font-mono w-10 text-right ${esFavorable ? 'text-success' : 'text-destructive'}`}>
-          {diff > 0 ? `+${diff}` : diff}
+        <span className={`text-xs font-mono w-10 text-right ${diff == null ? 'text-muted-foreground' : esFavorable ? 'text-success' : 'text-destructive'}`}>
+          {diff == null ? '-' : diff > 0 ? `+${diff}` : diff}
+        </span>
+        <span className="text-xs font-mono w-8 text-right text-muted-foreground" title="Valor del rival">
+          {valorRival != null ? valorRival : '-'}
         </span>
       </div>
     );

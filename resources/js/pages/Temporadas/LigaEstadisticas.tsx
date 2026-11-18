@@ -1,5 +1,5 @@
 import { Head, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,6 +18,7 @@ interface Equipo {
 interface Estadistica {
     equipo: Equipo;
     orden_liga: number | null;
+    dificultad_media?: number | null;
     partidos_jugados: number;
     victorias: number;
     empates: number;
@@ -33,6 +34,19 @@ interface Estadistica {
     tiros_realizados?: number;
     tiros_recibidos?: number;
     tiros_sin_porteria?: number;
+}
+
+interface ClasificacionJornadaRow {
+    equipo: Equipo;
+    partidos_jugados: number;
+    victorias: number;
+    empates: number;
+    derrotas: number;
+    goles_favor: number;
+    goles_contra: number;
+    diferencia_goles: number;
+    puntos: number;
+    dificultad_media: number | null;
 }
 
 interface Jugador {
@@ -145,10 +159,27 @@ interface Props {
     estadisticas_equipos: any;
 }
 
+const parseJornada = (value: number | string) => {
+    if (typeof value === 'number') return value > 0 ? value : 1;
+    const match = String(value).match(/(\d+)/);
+    return match ? Number(match[1]) : 1;
+};
+
 export default function LigaEstadisticas({ temporada, liga, estadisticas, partidos, estadisticas_equipos }: Props) {
     const [jugadoresData, setJugadoresData] = useState<JugadoresData | null>(null);
     const [loadingJugadores, setLoadingJugadores] = useState(false);
-    const [jornadaIndex, setJornadaIndex] = useState(0);
+
+    // Agrupar partidos por jornada
+    const partidosPorJornada = partidos.reduce((acc, p) => {
+        const j = parseJornada(p.jornada);
+        if (!acc[j]) acc[j] = [];
+        acc[j].push(p);
+        return acc;
+    }, {} as Record<number, Partido[]>);
+    const jornadas = Object.keys(partidosPorJornada).map(Number).sort((a, b) => a - b);
+
+    // Por defecto se muestran los resultados/clasificación de la última jornada disputada.
+    const [jornadaIndex, setJornadaIndex] = useState(() => (jornadas.length > 0 ? jornadas.length - 1 : 0));
 
     // Función para determinar la dificultad según la diferencia (valor_equipo - valor_rival)
     // Escala en intervalos de 6, de -2 a +3 igualado, de +3 a +8, de +8 a +13, ... hasta un máximo de +25 y -25
@@ -188,21 +219,80 @@ export default function LigaEstadisticas({ temporada, liga, estadisticas, partid
         }
     };
 
-    const parseJornada = (value: number | string) => {
-        if (typeof value === 'number') return value > 0 ? value : 1;
-        const match = String(value).match(/(\d+)/);
-        return match ? Number(match[1]) : 1;
-    };
-
-    // Agrupar partidos por jornada
-    const partidosPorJornada = partidos.reduce((acc, p) => {
-        const j = parseJornada(p.jornada);
-        if (!acc[j]) acc[j] = [];
-        acc[j].push(p);
-        return acc;
-    }, {} as Record<number, Partido[]>);
-    const jornadas = Object.keys(partidosPorJornada).map(Number).sort((a, b) => a - b);
     const jornadaActual = jornadas[jornadaIndex] ?? null;
+    const esUltimaJornada = jornadas.length > 0 && jornadaIndex === jornadas.length - 1;
+
+    // Clasificación acumulada con los partidos hasta la jornada seleccionada (incluida).
+    const clasificacionPorJornada = useMemo<ClasificacionJornadaRow[]>(() => {
+        const filas = new Map<number, ClasificacionJornadaRow>(
+            estadisticas.map((e) => [e.equipo.id, {
+                equipo: e.equipo,
+                partidos_jugados: 0,
+                victorias: 0,
+                empates: 0,
+                derrotas: 0,
+                goles_favor: 0,
+                goles_contra: 0,
+                diferencia_goles: 0,
+                puntos: 0,
+                dificultad_media: null,
+            }])
+        );
+        const valoresRivalPorEquipo = new Map<number, number[]>();
+
+        const partidosHastaJornada = jornadaActual == null
+            ? []
+            : partidos.filter((p) => parseJornada(p.jornada) <= jornadaActual);
+
+        const sumarResultado = (fila: ClasificacionJornadaRow, gFavor: number, gContra: number) => {
+            fila.partidos_jugados++;
+            fila.goles_favor += gFavor;
+            fila.goles_contra += gContra;
+            if (gFavor > gContra) { fila.victorias++; fila.puntos += 3; }
+            else if (gFavor === gContra) { fila.empates++; fila.puntos += 1; }
+            else { fila.derrotas++; }
+        };
+
+        partidosHastaJornada.forEach((p) => {
+            const gLocal = p.goles_equipo;
+            const gVisitante = p.goles_rival;
+
+            const local = filas.get(p.equipo_id);
+            if (local) {
+                sumarResultado(local, gLocal, gVisitante);
+                if (p.valor_rival != null) {
+                    const arr = valoresRivalPorEquipo.get(p.equipo_id) ?? [];
+                    arr.push(p.valor_rival);
+                    valoresRivalPorEquipo.set(p.equipo_id, arr);
+                }
+            }
+
+            const visitante = p.visitante_id != null ? filas.get(p.visitante_id) : undefined;
+            if (visitante) {
+                sumarResultado(visitante, gVisitante, gLocal);
+                if (p.valor_equipo != null) {
+                    const arr = valoresRivalPorEquipo.get(p.visitante_id as number) ?? [];
+                    arr.push(p.valor_equipo);
+                    valoresRivalPorEquipo.set(p.visitante_id as number, arr);
+                }
+            }
+        });
+
+        const resultado = Array.from(filas.values());
+        resultado.forEach((fila) => {
+            fila.diferencia_goles = fila.goles_favor - fila.goles_contra;
+            const valores = valoresRivalPorEquipo.get(fila.equipo.id);
+            fila.dificultad_media = valores && valores.length > 0
+                ? Math.round((valores.reduce((a, b) => a + b, 0) / valores.length) * 100) / 100
+                : null;
+        });
+
+        return resultado.sort((a, b) =>
+            b.puntos - a.puntos ||
+            b.diferencia_goles - a.diferencia_goles ||
+            b.goles_favor - a.goles_favor
+        );
+    }, [estadisticas, partidos, jornadaActual]);
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Temporadas', href: '/temporadas' },
@@ -288,17 +378,27 @@ export default function LigaEstadisticas({ temporada, liga, estadisticas, partid
 
                             {/* TAB 1: Clasificación + Jornadas */}
                             <TabsContent value="clasificacion">
-                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                                    {/* Clasificación — 2/3 */}
-                                    <div className="lg:col-span-2">
+                                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                                    {/* Clasificación — 3/4 */}
+                                    <div className="lg:col-span-3">
                                         <Card>
-                                            <CardHeader><CardTitle>Tabla de Clasificación</CardTitle></CardHeader>
+                                            <CardHeader>
+                                                <CardTitle>
+                                                    Tabla de Clasificación
+                                                    {jornadaActual != null && (
+                                                        <span className="ml-2 text-sm font-normal text-muted-foreground">
+                                                            {esUltimaJornada ? '(final)' : `(hasta jornada ${jornadaActual})`}
+                                                        </span>
+                                                    )}
+                                                </CardTitle>
+                                            </CardHeader>
                                             <CardContent>
                                                 <Table>
                                                     <TableHeader>
                                                         <TableRow>
                                                             <TableHead className="w-10">#</TableHead>
                                                             <TableHead>Equipo</TableHead>
+                                                            <TableHead className="text-center" title="Media del valor (valor_rival) de los rivales a los que se ha enfrentado el equipo">Dificultad</TableHead>
                                                             <TableHead className="text-center">PJ</TableHead>
                                                             <TableHead className="text-center">V</TableHead>
                                                             <TableHead className="text-center">E</TableHead>
@@ -310,7 +410,7 @@ export default function LigaEstadisticas({ temporada, liga, estadisticas, partid
                                                         </TableRow>
                                                     </TableHeader>
                                                     <TableBody>
-                                                        {estadisticas.map((stat, index) => (
+                                                        {clasificacionPorJornada.map((stat, index) => (
                                                             <TableRow key={stat.equipo.id} className={index === 0 ? 'bg-success/10' : ''}>
                                                                 <TableCell className="font-bold">
                                                                     {index === 0 && <Trophy className="h-4 w-4 inline text-warning mr-1" />}
@@ -321,6 +421,9 @@ export default function LigaEstadisticas({ temporada, liga, estadisticas, partid
                                                                         {stat.equipo.escudo && <img src={`/storage/images/${stat.equipo.escudo}`} alt={stat.equipo.nombre} className="h-6 w-6 object-contain" onError={e => { (e.currentTarget as HTMLImageElement).src = '/storage/images/nologo.png'; }} />}
                                                                         <span className="font-medium">{stat.equipo.nombre}</span>
                                                                     </div>
+                                                                </TableCell>
+                                                                <TableCell className="text-center text-muted-foreground">
+                                                                    {stat.dificultad_media != null ? stat.dificultad_media : '-'}
                                                                 </TableCell>
                                                                 <TableCell className="text-center">{stat.partidos_jugados}</TableCell>
                                                                 <TableCell className="text-center text-success">{stat.victorias}</TableCell>
@@ -340,34 +443,45 @@ export default function LigaEstadisticas({ temporada, liga, estadisticas, partid
                                         </Card>
                                     </div>
 
-                                    {/* Jornadas — 1/3 */}
+                                    {/* Jornadas — 1/4 */}
                                     <div className="lg:col-span-1">
                                         <Card className="h-full">
                                             <CardHeader>
                                                 <div className="flex items-center justify-between gap-2">
                                                     <CardTitle>{jornadaActual ? `Jornada ${jornadaActual}` : 'Jornadas'}</CardTitle>
                                                     {jornadas.length > 0 && (
-                                                        <div className="flex items-center gap-1">
-                                                            <button
-                                                                type="button"
-                                                                className="rounded border px-2 py-1 text-xs disabled:opacity-50"
-                                                                disabled={jornadaIndex === 0}
-                                                                onClick={() => setJornadaIndex((v) => Math.max(0, v - 1))}
-                                                            >
-                                                                Anterior
-                                                            </button>
-                                                            <span className="text-xs text-muted-foreground">{jornadaIndex + 1}/{jornadas.length}</span>
-                                                            <button
-                                                                type="button"
-                                                                className="rounded border px-2 py-1 text-xs disabled:opacity-50"
-                                                                disabled={jornadaIndex >= jornadas.length - 1}
-                                                                onClick={() => setJornadaIndex((v) => Math.min(jornadas.length - 1, v + 1))}
-                                                            >
-                                                                Siguiente
-                                                            </button>
-                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            className="rounded border px-2 py-1 text-xs disabled:opacity-50"
+                                                            disabled={esUltimaJornada}
+                                                            onClick={() => setJornadaIndex(jornadas.length - 1)}
+                                                            title="Ver los resultados de la última jornada"
+                                                        >
+                                                            Última jornada
+                                                        </button>
                                                     )}
                                                 </div>
+                                                {jornadas.length > 0 && (
+                                                    <div className="flex items-center justify-between gap-1 pt-1">
+                                                        <button
+                                                            type="button"
+                                                            className="rounded border px-2 py-1 text-xs disabled:opacity-50"
+                                                            disabled={jornadaIndex === 0}
+                                                            onClick={() => setJornadaIndex((v) => Math.max(0, v - 1))}
+                                                        >
+                                                            Anterior
+                                                        </button>
+                                                        <span className="text-xs text-muted-foreground">{jornadaIndex + 1}/{jornadas.length}</span>
+                                                        <button
+                                                            type="button"
+                                                            className="rounded border px-2 py-1 text-xs disabled:opacity-50"
+                                                            disabled={jornadaIndex >= jornadas.length - 1}
+                                                            onClick={() => setJornadaIndex((v) => Math.min(jornadas.length - 1, v + 1))}
+                                                        >
+                                                            Siguiente
+                                                        </button>
+                                                    </div>
+                                                )}
                                             </CardHeader>
                                             <CardContent className="pr-1">
                                                 {jornadaActual ? (
